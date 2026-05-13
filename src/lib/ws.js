@@ -1,16 +1,13 @@
-import { ACCOUNTS } from './mockData'
+import { api } from './api'
 
-// Simulated WebSocket: emits P&L deltas every 2s
+// Polls accounts every 5s. Replace with real WebSocket when backend supports it.
 export function subscribeLivePnL(callback) {
-  const interval = setInterval(() => {
-    ACCOUNTS.forEach(a => {
-      if (a.status !== 'ACTIVE') return
-      const delta = (Math.random() - 0.48) * 25
-      a.equity = Math.round((a.equity + delta) * 100) / 100
-      a.pnl = Math.round((a.equity - (a.balance - a.pnl)) * 100) / 100
-      a.pnlPct = Math.round((a.pnl / (a.balance - a.pnl)) * 10000) / 100
-    })
-    callback([...ACCOUNTS])
-  }, 2000)
-  return () => clearInterval(interval)
+  let cancelled = false
+  async function tick() {
+    if (cancelled) return
+    try { const accs = await api.getAccounts(); callback(accs) } catch {}
+    if (!cancelled) setTimeout(tick, 5000)
+  }
+  tick()
+  return () => { cancelled = true }
 }
