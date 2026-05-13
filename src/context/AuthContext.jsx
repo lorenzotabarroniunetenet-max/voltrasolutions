@@ -1,37 +1,21 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 
-const AuthContext = createContext(null)
+const Ctx = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  const [token, setTokenState] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const t = localStorage.getItem('voltra_token')
     const u = localStorage.getItem('voltra_user')
-    if (t && u) {
-      try { setUser(JSON.parse(u)); setTokenState(t) } catch {}
-    }
+    if (u) try { setUser(JSON.parse(u)) } catch {}
     setLoading(false)
   }, [])
 
-  const login = (u, t) => {
-    setUser(u); setTokenState(t)
-    localStorage.setItem('voltra_user', JSON.stringify(u))
-    localStorage.setItem('voltra_token', t)
-  }
-  const logout = () => {
-    setUser(null); setTokenState(null)
-    localStorage.removeItem('voltra_user')
-    localStorage.removeItem('voltra_token')
-  }
+  const login = (u) => { setUser(u); localStorage.setItem('voltra_user', JSON.stringify(u)) }
+  const logout = () => { setUser(null); localStorage.removeItem('voltra_user'); localStorage.removeItem('voltra_token') }
 
-  return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, isAdmin: user?.role === 'ADMIN' }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <Ctx.Provider value={{ user, login, logout, loading, isAdmin: user?.role === 'ADMIN' }}>{children}</Ctx.Provider>
 }
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => useContext(Ctx)

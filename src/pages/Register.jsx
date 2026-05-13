@@ -1,68 +1,49 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Layout from '../components/Layout'
+import Logo from '../components/Logo'
 import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import Logo from '../components/Logo'
 
 export default function Register() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [err, setErr] = useState('')
-  const { login } = useAuth()
   const nav = useNavigate()
+  const { login } = useAuth()
+  const [data, setData] = useState({ name: '', email: '', password: '' })
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
 
   async function submit(e) {
     e.preventDefault()
-    setLoading(true); setErr('')
+    setBusy(true); setErr('')
     try {
-      const { user, token } = await api.register({ name, email, password })
-      login(user, token)
+      const r = await api.register(data)
+      login(r.user)
       nav('/dashboard')
     } catch (e) { setErr(e.message) }
-    finally { setLoading(false) }
+    finally { setBusy(false) }
   }
 
+  const F = (k, l, type = 'text') => (
+    <div><div className="label">{l}</div><input className="input" type={type} value={data[k]} onChange={e => setData(d => ({ ...d, [k]: e.target.value }))} required /></div>
+  )
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 grid-bg">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8"><Logo size={36} /></div>
+    <Layout>
+      <div className="max-w-md mx-auto px-4 py-12">
         <div className="card p-8">
-          <h1 className="text-2xl font-bold text-fg mb-1">Create your account</h1>
-          <p className="text-sm text-muted mb-6">Get your funded MT5 account in minutes.</p>
+          <div className="flex justify-center mb-6"><Logo size={40} /></div>
+          <h1 className="text-2xl font-bold text-center mb-1">Create account</h1>
+          <p className="text-sm text-muted text-center mb-6">Start copying trades in minutes</p>
           <form onSubmit={submit} className="space-y-4">
-            <Field label="Full name" value={name} onChange={setName} />
-            <Field label="Email" type="email" value={email} onChange={setEmail} />
-            <Field label="Password" type="password" value={password} onChange={setPassword} />
+            {F('name', 'Name')}
+            {F('email', 'Email', 'email')}
+            {F('password', 'Password (min 8 chars)', 'password')}
             {err && <div className="text-sm text-danger">{err}</div>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-lg bg-brand text-bg font-semibold hover:bg-brand-dim transition disabled:opacity-60"
-            >
-              {loading ? 'Creating…' : 'Sign up'}
-            </button>
+            <button type="submit" disabled={busy} className="btn-primary w-full">{busy ? 'Creating…' : 'Create account'}</button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted">
-            Already have an account? <Link to="/login" className="text-brand hover:underline">Login</Link>
-          </div>
+          <p className="text-sm text-muted text-center mt-6">Already have an account? <Link to="/login" className="text-brand">Sign in</Link></p>
         </div>
       </div>
-    </div>
-  )
-}
-
-function Field({ label, value, onChange, type = 'text' }) {
-  return (
-    <label className="block">
-      <div className="text-xs font-mono uppercase tracking-wider text-muted mb-1.5">{label}</div>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-bg border border-border rounded-lg px-3 py-2.5 text-fg outline-none focus:border-brand transition"
-      />
-    </label>
+    </Layout>
   )
 }

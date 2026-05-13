@@ -2,44 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-
-html, body, #root { height: 100%; }
-
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  background: #0A0A0B;
-  color: #F5F5F7;
+:root {
+  --bg: #0A0A0B;
+  --surface: #13131A;
+  --surface2: #1B1B24;
+  --border: #2A2A35;
+  --fg: #F5F6FA;
+  --muted: #8B8C96;
+  --brand: #B4FF39;
+  --brand-dim: #a5ef2b;
+  --danger: #FF3D71;
+  --warn: #FFB23D;
 }
 
-/* Mono numbers */
-.num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+* { box-sizing: border-box; }
+html, body, #root { background: var(--bg); color: var(--fg); }
+body { font-family: 'Inter', -apple-system, sans-serif; margin: 0; }
+.num, .mono { font-family: 'JetBrains Mono', monospace; }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #0A0A0B; }
-::-webkit-scrollbar-thumb { background: #1F1F2A; border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #2A2A38; }
-
-/* Subtle grid background utility */
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(180,255,57,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(180,255,57,0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-/* Card */
-.card {
-  background: #13131A;
-  border: 1px solid #1F1F2A;
-  border-radius: 14px;
-}
-
-/* Pulse for live indicator */
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-.live-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.btn-primary { background: var(--brand); color: var(--bg); font-weight: 600; padding: 10px 16px; border-radius: 8px; transition: all 0.15s; border: none; cursor: pointer; }
+.btn-primary:hover { background: var(--brand-dim); box-shadow: 0 0 24px rgba(180,255,57,0.3); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+.btn-ghost:hover { color: var(--fg); border-color: var(--muted); }
+.input { background: var(--bg); border: 1px solid var(--border); color: var(--fg); border-radius: 8px; padding: 9px 12px; font-size: 14px; outline: none; width: 100%; }
+.input:focus { border-color: var(--brand); }
+.label { font-size: 11px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); display: block; margin-bottom: 5px; }
+.badge { font-size: 10px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.05em; }
