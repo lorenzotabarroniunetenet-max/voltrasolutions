@@ -6,6 +6,13 @@ export default function Accounts() {
   const [list, setList] = useState([])
   const [adding, setAdding] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState({})
+
+  async function refresh(id) {
+    setRefreshing(r => ({ ...r, [id]: true }))
+    try { const u = await api.accounts.get(id); setList(l => l.map(a => a.id === id ? u : a)) } catch {}
+    setRefreshing(r => ({ ...r, [id]: false }))
+  }
 
   async function load() { setList(await api.accounts.list()); setLoading(false) }
   useEffect(() => { load() }, [])
@@ -54,7 +61,7 @@ export default function Accounts() {
                     <td className="p-3 font-mono text-right">{a.currency} {a.balance.toFixed(2)}</td>
                     <td className="p-3 font-mono text-right">{a.equity.toFixed(2)}</td>
                     <td className="p-3"><span className={`badge ${a.status === 'ACTIVE' ? 'bg-brand/10 text-brand' : 'bg-warn/10 text-warn'}`}>{a.status}</span></td>
-                    <td className="p-3 text-right"><button onClick={() => remove(a.id)} className="text-xs text-danger hover:underline">Remove</button></td>
+                    <td className="p-3 text-right"><button onClick={() => refresh(a.id)} disabled={refreshing[a.id]} className="text-xs text-brand hover:underline disabled:opacity-40 mr-3">{refreshing[a.id] ? "…" : "Refresh"}</button><button onClick={() => remove(a.id)} className="text-xs text-danger hover:underline">Remove</button></td>
                   </tr>
                 ))}
               </tbody>
