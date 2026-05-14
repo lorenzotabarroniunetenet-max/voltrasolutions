@@ -49,6 +49,7 @@ function Header() {
           <a href="#features" style={{ transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color='var(--text)'} onMouseLeave={e => e.target.style.color='var(--muted)'}>Features</a>
           <a href="#plans" onMouseEnter={e => e.target.style.color='var(--text)'} onMouseLeave={e => e.target.style.color='var(--muted)'}>Programmi</a>
           <a href="#how" onMouseEnter={e => e.target.style.color='var(--text)'} onMouseLeave={e => e.target.style.color='var(--muted)'}>Come funziona</a>
+          <Link to="/contact" style={{ transition: 'color 0.15s' }} onMouseEnter={e => e.target.style.color='var(--text)'} onMouseLeave={e => e.target.style.color='var(--muted)'}>Contatti</Link>
           <a href="#faq" onMouseEnter={e => e.target.style.color='var(--text)'} onMouseLeave={e => e.target.style.color='var(--muted)'}>FAQ</a>
         </nav>
         <div style={{ display: 'flex', gap: 8 }}>

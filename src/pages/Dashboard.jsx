@@ -21,32 +21,25 @@ export default function Dashboard() {
   useEffect(() => {
     if (!selectedId) return
     setLoading(true)
-    api.accountStats(selectedId)
-      .then(setStats)
-      .catch(e => console.error(e))
-      .finally(() => setLoading(false))
+    api.accountStats(selectedId).then(setStats).catch(e => console.error(e)).finally(() => setLoading(false))
   }, [selectedId])
 
-  if (loading) return <div style={{ color: 'var(--voltra-muted)', padding: 40 }}>Caricamento...</div>
+  if (loading) return <div style={{ color: 'var(--muted)', padding: 40 }}>Caricamento...</div>
 
   if (accounts.length === 0) {
     return (
-      <div className="voltra-card" style={{ textAlign: 'center', padding: 60 }}>
+      <div className="card" style={{ textAlign: 'center', padding: 60 }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>⚡</div>
-        <h2 style={{ margin: '0 0 12px' }}>Nessun account attivo</h2>
-        <p style={{ color: 'var(--voltra-muted)', marginBottom: 24 }}>
-          Acquista il tuo primo programma per iniziare a tradare con Voltra.
-        </p>
-        <a href="/buy" className="voltra-btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }}>
-          Acquista programma
-        </a>
+        <h2 className="display" style={{ margin: '0 0 12px', fontSize: 24 }}>Nessun account attivo</h2>
+        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>Acquista il tuo primo programma per iniziare a tradare con Voltra.</p>
+        <a href="/buy" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }}>Acquista programma</a>
       </div>
     )
   }
 
   if (!stats) return null
 
-  const { account, program, rules, stats: s, snapshots } = stats
+  const { account, program, rules, stats: s, snapshots, payoutInfo } = stats
   const startBalance = Number(account.startBalance)
   const equityChange = ((s.currentEquity - startBalance) / startBalance) * 100
 
@@ -55,131 +48,115 @@ export default function Dashboard() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>Dashboard</h1>
-          <div style={{ color: 'var(--voltra-muted)', fontSize: 14, marginTop: 4 }}>
-            Stato del tuo account prop in tempo reale
-          </div>
+          <h1 className="display" style={{ margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>Dashboard</h1>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>Stato del tuo account prop</div>
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          <select
-            value={selectedId}
-            onChange={e => setSelectedId(e.target.value)}
-            className="voltra-input"
-            style={{ width: 'auto', minWidth: 220 }}
-          >
-            {accounts.map(a => (
-              <option key={a.id} value={a.id}>
-                {a.brokerLogin} — {a.program.name}
-              </option>
-            ))}
+          <select value={selectedId} onChange={e => setSelectedId(e.target.value)} className="voltra-input" style={{ width: 'auto', minWidth: 220 }}>
+            {accounts.map(a => <option key={a.id} value={a.id}>{a.brokerLogin} — {a.program.name}</option>)}
           </select>
-          <span className="badge badge-success">
-            <span className="pulse-dot"></span> {account.status}
+          <span className={`badge ${account.status === 'ACTIVE' ? 'badge-success' : account.status === 'FAILED' ? 'badge-fail' : 'badge-info'}`}>
+            {account.status === 'ACTIVE' && <span className="pulse-dot"></span>} {account.status}
           </span>
         </div>
       </div>
 
       {/* Program info bar */}
-      <div className="voltra-card" style={{ marginBottom: 24, padding: 16 }}>
+      <div className="card" style={{ marginBottom: 24, padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, fontSize: 13 }}>
-          <div>
-            <span style={{ color: 'var(--voltra-muted)' }}>Programma: </span>
-            <strong>{program.name}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--voltra-muted)' }}>Saldo iniziale: </span>
-            <strong>${startBalance.toLocaleString()}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--voltra-muted)' }}>Profit split: </span>
-            <strong>{Number(program.profitSplitPct)}%</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--voltra-muted)' }}>Broker: </span>
-            <strong>{account.broker}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--voltra-muted)' }}>Login: </span>
-            <strong>{account.brokerLogin}</strong>
-          </div>
+          <div><span style={{ color: 'var(--muted)' }}>Programma: </span><strong>{program.name}</strong></div>
+          <div><span style={{ color: 'var(--muted)' }}>Saldo iniziale: </span><strong>${startBalance.toLocaleString()}</strong></div>
+          <div><span style={{ color: 'var(--muted)' }}>Profit split: </span><strong>{Number(program.profitSplitPct)}%</strong></div>
+          <div><span style={{ color: 'var(--muted)' }}>Broker: </span><strong>{account.broker}</strong></div>
+          <div><span style={{ color: 'var(--muted)' }}>Login: </span><strong>{account.brokerLogin}</strong></div>
+          <div><span style={{ color: 'var(--muted)' }}>Payout ogni: </span><strong>{program.payoutFrequencyDays || 7} giorni</strong></div>
         </div>
       </div>
+
+      {/* Payout eligibility banner */}
+      {payoutInfo && !payoutInfo.eligible && (
+        <div className="card" style={{ marginBottom: 24, padding: 16, background: 'rgba(255, 165, 2, 0.06)', border: '1px solid rgba(255, 165, 2, 0.3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 20 }}>⏳</span>
+            <div style={{ flex: 1 }}>
+              <strong>Prossimo payout disponibile fra {payoutInfo.daysLeft} giorni</strong>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+                Ultima richiesta: {new Date(payoutInfo.lastRequestDate).toLocaleDateString('it-IT')} · I payout sono permessi ogni {payoutInfo.freqDays} giorni
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {payoutInfo && payoutInfo.eligible && accounts.find(a => a.id === selectedId)?.status === 'ACTIVE' && (
+        <div className="card" style={{ marginBottom: 24, padding: 16, background: 'rgba(180, 255, 57, 0.04)', border: '1px solid rgba(180, 255, 57, 0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 20 }}>💸</span>
+              <div>
+                <strong>Sei idoneo per richiedere un payout</strong>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Vai alla pagina Payout per richiederlo</div>
+              </div>
+            </div>
+            <a href="/payout" className="btn-primary" style={{ textDecoration: 'none', padding: '8px 16px', fontSize: 13 }}>Richiedi payout →</a>
+          </div>
+        </div>
+      )}
 
       {/* KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
         <KpiCard
-          icon="💰"
-          label="Saldo attuale"
+          icon="💰" label="Saldo attuale"
           value={`$${s.currentBalance.toLocaleString()}`}
           subtitle={`Equity: $${s.currentEquity.toLocaleString()}`}
-          badge={
-            <span className={`badge ${equityChange >= 0 ? 'badge-success' : 'badge-fail'}`}>
-              {equityChange >= 0 ? '+' : ''}{equityChange.toFixed(2)}%
-            </span>
-          }
+          badge={<span className={`badge ${equityChange >= 0 ? 'badge-success' : 'badge-fail'}`}>{equityChange >= 0 ? '+' : ''}{equityChange.toFixed(2)}%</span>}
         />
-
         <KpiCard
-          icon="📈"
-          label="P&L Oggi"
+          icon="📈" label="P&L Oggi"
           value={`${s.dailyPL >= 0 ? '+' : ''}$${s.dailyPL.toLocaleString()}`}
           subtitle={`Drawdown: ${s.drawdownPct.toFixed(2)}%`}
         />
-
         {program.profitTargetPct && rules.profitTarget && (
           <KpiCard
-            icon="🎯"
-            label="Profit Target"
+            icon="🎯" label="Profit Target"
             value={`$${rules.profitTarget.target.toLocaleString()}`}
             subtitle={`Mancano: $${(rules.profitTarget.target - rules.profitTarget.current).toLocaleString()}`}
             progress={(rules.profitTarget.current / rules.profitTarget.target) * 100}
-            progressColor="var(--voltra-lime)"
+            progressColor="var(--lime)"
             badge={<RuleBadge status={rules.profitTarget.status} />}
           />
         )}
-
         <KpiCard
-          icon="⚠️"
-          label="Limite perdita giornaliera"
+          icon="⚠️" label="Daily Loss Limit"
           value={`$${rules.maxDailyLoss.limit.toLocaleString()}`}
-          subtitle={`Equity vs limite`}
-          progress={Math.max(0, ((rules.maxDailyLoss.current - rules.maxDailyLoss.limit) / (startBalance - rules.maxDailyLoss.limit)) * 100)}
-          progressColor="#ffa502"
+          subtitle="Equity vs limite"
           badge={<RuleBadge status={rules.maxDailyLoss.status} />}
         />
-
         <KpiCard
-          icon="🛑"
-          label="Limite massimo perdita"
+          icon="🛑" label="Max Loss Limit"
           value={`$${rules.maxOverallLoss.limit.toLocaleString()}`}
-          subtitle={`Equity vs limite`}
-          progress={Math.max(0, ((rules.maxOverallLoss.current - rules.maxOverallLoss.limit) / (startBalance - rules.maxOverallLoss.limit)) * 100)}
-          progressColor="#ff4757"
+          subtitle="Equity vs limite"
           badge={<RuleBadge status={rules.maxOverallLoss.status} />}
         />
-
         <KpiCard
-          icon="📅"
-          label="Giorni di trading"
+          icon="📅" label="Giorni di trading"
           value={`${s.tradingDays}${program.minTradingDays ? ` / ${program.minTradingDays}` : ''}`}
           subtitle={program.minTradingDays ? `Minimo richiesto: ${program.minTradingDays}` : 'Nessun minimo'}
           badge={rules.minTradingDays && <RuleBadge status={rules.minTradingDays.status} />}
         />
       </div>
 
-      {/* Growth Chart */}
+      {/* Chart */}
       <div style={{ marginBottom: 24 }}>
         <GrowthChart snapshots={snapshots} account={account} program={program} />
       </div>
 
-      {/* Stats + Rules */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 24 }}>
-        {/* Statistics */}
-        <div className="voltra-card">
-          <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>Statistiche</h3>
+      {/* Stats + Rules + Trading conditions */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+        <div className="card">
+          <h3 className="display" style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>Statistiche</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, fontSize: 14 }}>
-            <Stat label="Miglior trade" value={s.bestTrade != null ? `$${s.bestTrade.toLocaleString()}` : '—'} color="var(--voltra-lime)" />
-            <Stat label="Peggior trade" value={s.worstTrade != null ? `$${s.worstTrade.toLocaleString()}` : '—'} color="#ff4757" />
+            <Stat label="Miglior trade" value={s.bestTrade != null ? `$${s.bestTrade.toLocaleString()}` : '—'} color="var(--lime)" />
+            <Stat label="Peggior trade" value={s.worstTrade != null ? `$${s.worstTrade.toLocaleString()}` : '—'} color="var(--red)" />
             <Stat label="Vittoria media" value={s.avgWin != null ? `$${s.avgWin}` : '—'} />
             <Stat label="Perdita media" value={s.avgLoss != null ? `$${s.avgLoss}` : '—'} />
             <Stat label="N. trades" value={s.totalTrades} />
@@ -189,12 +166,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Program rules */}
-        <div className="voltra-card">
-          <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>Regole del programma</h3>
+        <div className="card">
+          <h3 className="display" style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>Regole del programma</h3>
           <table style={{ width: '100%', fontSize: 14 }}>
             <thead>
-              <tr style={{ color: 'var(--voltra-muted)', textAlign: 'left', fontSize: 12, textTransform: 'uppercase' }}>
+              <tr style={{ color: 'var(--muted)', textAlign: 'left', fontSize: 12, textTransform: 'uppercase' }}>
                 <th style={{ padding: '8px 0', fontWeight: 500 }}>Obiettivo</th>
                 <th style={{ padding: '8px 0', fontWeight: 500 }}>Stato</th>
                 <th style={{ padding: '8px 0', fontWeight: 500, textAlign: 'right' }}>Attuale</th>
@@ -203,38 +179,50 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {rules.profitTarget && (
-                <tr style={{ borderTop: '1px solid var(--voltra-border)' }}>
-                  <td style={{ padding: '12px 0' }}>Profit Target</td>
+                <tr style={{ borderTop: '1px solid var(--border)' }}>
+                  <td style={{ padding: '10px 0' }}>Profit Target</td>
                   <td><RuleBadge status={rules.profitTarget.status} /></td>
                   <td style={{ textAlign: 'right' }}>${rules.profitTarget.current.toLocaleString()}</td>
                   <td style={{ textAlign: 'right' }}>${rules.profitTarget.target.toLocaleString()}</td>
                 </tr>
               )}
               {rules.minTradingDays && (
-                <tr style={{ borderTop: '1px solid var(--voltra-border)' }}>
-                  <td style={{ padding: '12px 0' }}>Giorni di trading</td>
+                <tr style={{ borderTop: '1px solid var(--border)' }}>
+                  <td style={{ padding: '10px 0' }}>Giorni di trading</td>
                   <td><RuleBadge status={rules.minTradingDays.status} /></td>
                   <td style={{ textAlign: 'right' }}>{rules.minTradingDays.current}</td>
                   <td style={{ textAlign: 'right' }}>{rules.minTradingDays.required}</td>
                 </tr>
               )}
-              <tr style={{ borderTop: '1px solid var(--voltra-border)' }}>
-                <td style={{ padding: '12px 0' }}>Daily Loss</td>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 0' }}>Daily Loss</td>
                 <td><RuleBadge status={rules.maxDailyLoss.status} /></td>
                 <td style={{ textAlign: 'right' }}>${rules.maxDailyLoss.current.toLocaleString()}</td>
                 <td style={{ textAlign: 'right' }}>${rules.maxDailyLoss.limit.toLocaleString()}</td>
               </tr>
-              <tr style={{ borderTop: '1px solid var(--voltra-border)' }}>
-                <td style={{ padding: '12px 0' }}>Max Loss</td>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 0' }}>Max Loss</td>
                 <td><RuleBadge status={rules.maxOverallLoss.status} /></td>
                 <td style={{ textAlign: 'right' }}>${rules.maxOverallLoss.current.toLocaleString()}</td>
                 <td style={{ textAlign: 'right' }}>${rules.maxOverallLoss.limit.toLocaleString()}</td>
               </tr>
-              <tr style={{ borderTop: '1px solid var(--voltra-border)' }}>
-                <td style={{ padding: '12px 0' }}>Scalping</td>
-                <td><RuleBadge status={program.scalpingAllowed ? 'OK' : 'FAILED'} /></td>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 0' }}>Scalping</td>
+                <td><RuleBadge status={rules.scalping === 'ALLOWED' ? 'OK' : 'FAILED'} /></td>
                 <td style={{ textAlign: 'right' }}>—</td>
-                <td style={{ textAlign: 'right' }}>{program.scalpingAllowed ? 'Permesso' : 'Vietato'}</td>
+                <td style={{ textAlign: 'right' }}>{rules.scalping === 'ALLOWED' ? 'Permesso' : 'Vietato'}</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 0' }}>News trading</td>
+                <td><RuleBadge status={rules.news === 'ALLOWED' ? 'OK' : 'FAILED'} /></td>
+                <td style={{ textAlign: 'right' }}>—</td>
+                <td style={{ textAlign: 'right' }}>{rules.news === 'ALLOWED' ? 'Permesso' : 'Vietato'}</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td style={{ padding: '10px 0' }}>Hold weekend</td>
+                <td><RuleBadge status={rules.weekendHold === 'ALLOWED' ? 'OK' : 'FAILED'} /></td>
+                <td style={{ textAlign: 'right' }}>—</td>
+                <td style={{ textAlign: 'right' }}>{rules.weekendHold === 'ALLOWED' ? 'Permesso' : 'Vietato'}</td>
               </tr>
             </tbody>
           </table>
@@ -247,8 +235,8 @@ export default function Dashboard() {
 function Stat({ label, value, color }) {
   return (
     <div>
-      <div style={{ color: 'var(--voltra-muted)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 600, color: color || 'var(--voltra-text)' }}>{value}</div>
+      <div style={{ color: 'var(--muted)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 600, color: color || 'var(--text)' }}>{value}</div>
     </div>
   )
 }

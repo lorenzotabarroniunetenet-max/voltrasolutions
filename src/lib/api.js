@@ -17,14 +17,12 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  // Auth
   login: (email, password) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   register: (email, password, name) => request('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) }),
   verifyEmail: (token) => request(`/api/auth/verify-email?token=${token}`),
   resendVerify: (email) => request('/api/auth/resend-verify', { method: 'POST', body: JSON.stringify({ email }) }),
   me: () => request('/api/auth/me'),
 
-  // Trader (prop)
   myAccounts: () => request('/api/prop/accounts'),
   account: (id) => request(`/api/prop/accounts/${id}`),
   accountSnapshots: (id, from, to) => request(`/api/prop/accounts/${id}/snapshots${from ? `?from=${from}&to=${to}` : ''}`),
@@ -32,21 +30,34 @@ export const api = {
   myPayouts: () => request('/api/prop/payouts'),
   requestPayout: (data) => request('/api/prop/payouts', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Purchase
   programs: () => request('/api/purchase/programs'),
+  paymentInfo: () => request('/api/purchase/payment-info'),
   requestPurchase: (data) => request('/api/purchase/request', { method: 'POST', body: JSON.stringify(data) }),
+
+  contactInfo: () => request('/api/contact/info'),
+  sendContact: (data) => request('/api/contact/send', { method: 'POST', body: JSON.stringify(data) }),
 
   // Admin
   adminUsers: () => request('/api/admin/users'),
+  adminUserDetail: (id) => request(`/api/admin/users/${id}`),
+  adminUpdateUser: (id, data) => request(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  adminDeleteUser: (id) => request(`/api/admin/users/${id}`, { method: 'DELETE' }),
   adminAccounts: () => request('/api/admin/accounts'),
   adminCreateAccount: (data) => request('/api/admin/accounts', { method: 'POST', body: JSON.stringify(data) }),
   adminUpdateAccount: (id, data) => request(`/api/admin/accounts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  adminDeleteAccount: (id) => request(`/api/admin/accounts/${id}`, { method: 'DELETE' }),
+  adminAccountSnapshots: (id) => request(`/api/admin/accounts/${id}/snapshots`),
   adminPrograms: () => request('/api/admin/programs'),
   adminCreateProgram: (data) => request('/api/admin/programs', { method: 'POST', body: JSON.stringify(data) }),
+  adminUpdateProgram: (id, data) => request(`/api/admin/programs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  adminDeleteProgram: (id) => request(`/api/admin/programs/${id}`, { method: 'DELETE' }),
   adminCreateSnapshots: (data) => request('/api/admin/snapshots', { method: 'POST', body: JSON.stringify(data) }),
   adminDeleteSnapshot: (id) => request(`/api/admin/snapshots/${id}`, { method: 'DELETE' }),
   adminPayouts: (status) => request(`/api/admin/payouts${status ? `?status=${status}` : ''}`),
   adminUpdatePayout: (id, data) => request(`/api/admin/payouts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  adminSettings: () => request('/api/admin/settings'),
+  adminUpdateSetting: (key, value, isPublic) => request(`/api/admin/settings/${key}`, { method: 'PUT', body: JSON.stringify({ value, isPublic }) }),
+  adminBulkSettings: (items) => request('/api/admin/settings/bulk', { method: 'POST', body: JSON.stringify(items) }),
 
   auth: { setToken, clearToken, getToken },
 }
