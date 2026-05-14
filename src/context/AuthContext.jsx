@@ -1,21 +1,33 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { api } from '../lib/api.js'
 
-const Ctx = createContext(null)
+const AuthCtx = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const u = localStorage.getItem('voltra_user')
-    if (u) try { setUser(JSON.parse(u)) } catch {}
-    setLoading(false)
+    if (api.auth.getToken()) {
+      api.me().then(setUser).catch(() => api.auth.clearToken()).finally(() => setLoading(false))
+    } else {
+      setLoading(false)
+    }
   }, [])
 
-  const login = (u) => { setUser(u); localStorage.setItem('voltra_user', JSON.stringify(u)) }
-  const logout = () => { setUser(null); localStorage.removeItem('voltra_user'); localStorage.removeItem('voltra_token') }
+  const login = async (email, password) => {
+    const { token, user } = await api.login(email, password)
+    api.auth.setToken(token)
+    setUser(user)
+    return user
+  }
 
-  return <Ctx.Provider value={{ user, login, logout, loading, isAdmin: user?.role === 'ADMIN' }}>{children}</Ctx.Provider>
+  const logout = () => {
+    api.auth.clearToken()
+    setUser(null)
+  }
+
+  return <AuthCtx.Provider value={{ user, loading, login, logout }}>{children}</AuthCtx.Provider>
 }
 
-export const useAuth = () => useContext(Ctx)
+export const useAuth = () => useContext(AuthCtx)

@@ -1,33 +1,37 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from './context/AuthContext'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Accounts from './pages/Accounts'
-import Rules from './pages/Rules'
-import Trades from './pages/Trades'
-import Admin from './pages/Admin'
+import { useAuth } from './context/AuthContext.jsx'
+import Landing from './pages/Landing.jsx'
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
+import VerifyEmail from './pages/VerifyEmail.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+import Payout from './pages/Payout.jsx'
+import BuyProgram from './pages/BuyProgram.jsx'
+import AdminPanel from './pages/AdminPanel.jsx'
+import Layout from './components/Layout.jsx'
 
-function Protected({ children }) {
+function PrivateRoute({ children, admin }) {
   const { user, loading } = useAuth()
-  if (loading) return null
-  if (!user) return <Navigate to="/login" replace />
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Caricamento...</div>
+  if (!user) return <Navigate to="/login" />
+  if (admin && user.role !== 'ADMIN') return <Navigate to="/dashboard" />
   return children
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
-      <Route path="/accounts" element={<Protected><Accounts /></Protected>} />
-      <Route path="/rules" element={<Protected><Rules /></Protected>} />
-      <Route path="/trades" element={<Protected><Trades /></Protected>} />
-      <Route path="/admin" element={<Protected><Admin /></Protected>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      
+      <Route path="/dashboard" element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
+      <Route path="/payout" element={<PrivateRoute><Layout><Payout /></Layout></PrivateRoute>} />
+      <Route path="/buy" element={<PrivateRoute><Layout><BuyProgram /></Layout></PrivateRoute>} />
+      <Route path="/admin" element={<PrivateRoute admin><Layout><AdminPanel /></Layout></PrivateRoute>} />
+      
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )
 }

@@ -1,41 +1,52 @@
-const API = import.meta.env.VITE_API_URL || ''
-function tk() { return localStorage.getItem('voltra_token') }
-function tkSet(t) { localStorage.setItem('voltra_token', t) }
-function tkClear() { localStorage.removeItem('voltra_token'); localStorage.removeItem('voltra_user') }
-async function req(p, o = {}) {
-  const h = { 'Content-Type': 'application/json' }
-  if (o.auth !== false && tk()) h.Authorization = `Bearer ${tk()}`
-  const r = await fetch(API + p, { method: o.method || 'GET', headers: h, body: o.body ? JSON.stringify(o.body) : undefined })
-  const d = await r.json().catch(() => ({}))
-  if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`)
-  return d
-}
-export const api = {
-  login: (email, password) => req('/api/auth/login', { method:'POST', auth:false, body:{email,password} }).then(r => { tkSet(r.token); localStorage.setItem('voltra_user', JSON.stringify(r.user)); return r }),
-  register: (data) => req('/api/auth/register', { method:'POST', auth:false, body:data }).then(r => { tkSet(r.token); localStorage.setItem('voltra_user', JSON.stringify(r.user)); return r }),
-  me: () => req('/api/auth/me'),
-  logout: () => tkClear(),
-  accounts: {
-    list: () => req('/api/accounts'),
-    get: (id) => req('/api/accounts/' + id),
-    create: (data) => req('/api/accounts', { method:'POST', body:data }),
-    update: (id, data) => req('/api/accounts/' + id, { method:'PATCH', body:data }),
-    remove: (id) => req('/api/accounts/' + id, { method:'DELETE' })
-  },
-  rules: {
-    list: () => req('/api/rules'),
-    get: (id) => req('/api/rules/' + id),
-    create: (data) => req('/api/rules', { method:'POST', body:data }),
-    update: (id, data) => req('/api/rules/' + id, { method:'PATCH', body:data }),
-    remove: (id) => req('/api/rules/' + id, { method:'DELETE' })
-  },
-  trades: {
-    list: (params={}) => req('/api/trades?' + new URLSearchParams(params)),
-    stats: () => req('/api/trades/stats')
-  },
-  admin: {
-    users: () => req('/api/admin/users'),
-    updateUser: (id, data) => req('/api/admin/users/' + id, { method:'PATCH', body:data }),
-    stats: () => req('/api/admin/stats')
+const API = import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'
+
+function getToken() { return localStorage.getItem('voltra_token') }
+function setToken(t) { localStorage.setItem('voltra_token', t) }
+function clearToken() { localStorage.removeItem('voltra_token') }
+
+async function request(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
+  const token = getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(`${API}${path}`, { ...options, headers })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }))
+    throw new Error(err.error || `HTTP ${res.status}`)
   }
+  return res.json()
+}
+
+export const api = {
+  // Auth
+  login: (email, password) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (email, password, name) => request('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) }),
+  verifyEmail: (token) => request(`/api/auth/verify-email?token=${token}`),
+  resendVerify: (email) => request('/api/auth/resend-verify', { method: 'POST', body: JSON.stringify({ email }) }),
+  me: () => request('/api/auth/me'),
+
+  // Trader (prop)
+  myAccounts: () => request('/api/prop/accounts'),
+  account: (id) => request(`/api/prop/accounts/${id}`),
+  accountSnapshots: (id, from, to) => request(`/api/prop/accounts/${id}/snapshots${from ? `?from=${from}&to=${to}` : ''}`),
+  accountStats: (id) => request(`/api/prop/accounts/${id}/stats`),
+  myPayouts: () => request('/api/prop/payouts'),
+  requestPayout: (data) => request('/api/prop/payouts', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Purchase
+  programs: () => request('/api/purchase/programs'),
+  requestPurchase: (data) => request('/api/purchase/request', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Admin
+  adminUsers: () => request('/api/admin/users'),
+  adminAccounts: () => request('/api/admin/accounts'),
+  adminCreateAccount: (data) => request('/api/admin/accounts', { method: 'POST', body: JSON.stringify(data) }),
+  adminUpdateAccount: (id, data) => request(`/api/admin/accounts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  adminPrograms: () => request('/api/admin/programs'),
+  adminCreateProgram: (data) => request('/api/admin/programs', { method: 'POST', body: JSON.stringify(data) }),
+  adminCreateSnapshots: (data) => request('/api/admin/snapshots', { method: 'POST', body: JSON.stringify(data) }),
+  adminDeleteSnapshot: (id) => request(`/api/admin/snapshots/${id}`, { method: 'DELETE' }),
+  adminPayouts: (status) => request(`/api/admin/payouts${status ? `?status=${status}` : ''}`),
+  adminUpdatePayout: (id, data) => request(`/api/admin/payouts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  auth: { setToken, clearToken, getToken },
 }
