@@ -33,14 +33,11 @@ const VALID_GRADES = Object.keys(GRADE_LORE)
 export default function BuyProgram() {
   const [programs, setPrograms] = useState([])
   const [wallets, setWallets] = useState([])
+  const [telegramUrl, setTelegramUrl] = useState('')
   const [selected, setSelected] = useState(null)
   const [selectedNetwork, setSelectedNetwork] = useState(null)
-  const [txHash, setTxHash] = useState('')
   const [step, setStep] = useState('select')
-  const [err, setErr] = useState('')
-  const [msg, setMsg] = useState('')
   const [copied, setCopied] = useState(null)
-  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     api.programs().then(d => {
@@ -52,6 +49,7 @@ export default function BuyProgram() {
       const list = d.wallets || []
       setWallets(list)
       if (list.length > 0) setSelectedNetwork(list[0].network)
+      if (d.telegramUrl) setTelegramUrl(d.telegramUrl)
     }).catch(() => {})
   }, [])
 
@@ -59,31 +57,6 @@ export default function BuyProgram() {
     navigator.clipboard.writeText(text)
     setCopied(key)
     setTimeout(() => setCopied(null), 1500)
-  }
-
-  const requestPurchase = async () => {
-    if (!txHash.trim()) { setErr('Inserire la TxHash della transazione'); return }
-    setErr(''); setMsg(''); setLoading(true)
-    try {
-      await api.requestPurchase({
-        programId: selected.id,
-        network: selectedNetwork,
-        txHash: txHash.trim(),
-      })
-      setMsg('Richiesta trasmessa al Comando. Verifica entro 24 ore.')
-      setStep('done')
-    } catch (e) { setErr(e.message) } finally { setLoading(false) }
-  }
-
-  if (step === 'done') {
-    return (
-      <div className="card" style={{ textAlign: 'center', padding: 60, maxWidth: 520, margin: '40px auto' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🎖</div>
-        <h2 className="display" style={{ margin: '0 0 12px', fontSize: 22 }}>Richiesta trasmessa</h2>
-        <p style={{ color: 'var(--muted)', marginBottom: 24, lineHeight: 1.6 }}>{msg}</p>
-        <button onClick={() => { setStep('select'); setSelected(null); setTxHash(''); }} className="btn-primary">Torna ai gradi</button>
-      </div>
-    )
   }
 
   if (step === 'pay' && selected) {
@@ -160,7 +133,7 @@ export default function BuyProgram() {
                   </div>
 
                   {/* QR + Address */}
-                  <div style={{ marginBottom: 20, padding: 20, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                  <div style={{ marginBottom: 24, padding: 20, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
                       {qrUrl && (
                         <div style={{ background: '#0c0c0c', padding: 8, borderRadius: 8, flexShrink: 0 }}>
@@ -184,26 +157,27 @@ export default function BuyProgram() {
                     </div>
                   </div>
 
-                  {/* TxHash input */}
-                  <div style={{ marginBottom: 20 }}>
-                    <label className="label">Hash della transazione (TxHash)</label>
-                    <input
-                      className="voltra-input"
-                      value={txHash}
-                      onChange={e => setTxHash(e.target.value)}
-                      placeholder="Es. 0xabc123... oppure TR7NHq..."
-                      style={{ fontFamily: 'monospace', fontSize: 12 }}
-                    />
-                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
-                      Dopo aver effettuato il pagamento, incolla qui l'hash della transazione per la verifica.
+                  {/* Telegram instructions */}
+                  <div style={{ padding: 20, background: 'rgba(180,255,57,0.04)', border: '1px solid rgba(180,255,57,0.25)', borderRadius: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
+                      <span style={{ fontSize: 22 }}>📨</span>
+                      <div>
+                        <strong style={{ color: 'var(--text)', display: 'block', marginBottom: 6 }}>Dopo il pagamento</strong>
+                        <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+                          Invia la ricevuta della transazione sul canale Telegram dedicato. Il Comando attiverà il tuo grado.
+                        </p>
+                      </div>
                     </div>
+                    {telegramUrl ? (
+                      <a href={telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ width: '100%', justifyContent: 'center', textDecoration: 'none', display: 'flex' }}>
+                        Apri Telegram →
+                      </a>
+                    ) : (
+                      <div style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center', padding: 8 }}>
+                        Canale Telegram non configurato. Contatta il Comando.
+                      </div>
+                    )}
                   </div>
-
-                  {err && <div style={{ color: '#ff4757', fontSize: 13, marginBottom: 12 }}>{err}</div>}
-
-                  <button onClick={requestPurchase} disabled={loading || !txHash.trim()} className="btn-primary" style={{ width: '100%', justifyContent: 'center', opacity: (loading || !txHash.trim()) ? 0.5 : 1 }}>
-                    {loading ? 'Invio in corso...' : 'Conferma pagamento →'}
-                  </button>
                 </>
               )}
             </>
@@ -226,13 +200,9 @@ export default function BuyProgram() {
 
           return (
             <div key={p.id} className="card" style={{
-              padding: 28,
-              position: 'relative',
-              overflow: 'hidden',
-              border: `1px solid ${borderColor}`,
-              opacity: isWip ? 0.55 : 1,
-              display: 'flex',
-              flexDirection: 'column',
+              padding: 28, position: 'relative', overflow: 'hidden',
+              border: `1px solid ${borderColor}`, opacity: isWip ? 0.55 : 1,
+              display: 'flex', flexDirection: 'column',
             }}>
               <div style={{ position: 'absolute', top: -20, right: -10, fontSize: 110, opacity: 0.04, pointerEvents: 'none', lineHeight: 1 }}>{lore.rank}</div>
 
@@ -242,13 +212,9 @@ export default function BuyProgram() {
 
               <div style={{ fontSize: 36, marginBottom: 12 }}>{lore.rank}</div>
               <h3 className="display" style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, letterSpacing: '0.02em', color: 'var(--text)' }}>{p.name}</h3>
-              <div style={{ fontSize: 11, color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 16 }}>
-                {lore.mission}
-              </div>
+              <div style={{ fontSize: 11, color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 16 }}>{lore.mission}</div>
 
-              <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.65, marginBottom: 24, fontStyle: 'italic', flex: 1 }}>
-                "{lore.legend}"
-              </p>
+              <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.65, marginBottom: 24, fontStyle: 'italic', flex: 1 }}>"{lore.legend}"</p>
 
               <div style={{ padding: '16px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
