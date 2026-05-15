@@ -65,12 +65,12 @@ export default function Dashboard() {
       {/* Program info bar */}
       <div className="card" style={{ marginBottom: 24, padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, fontSize: 13 }}>
-          <div><span style={{ color: 'var(--muted)' }}>Programma: </span><strong>{program.name}</strong></div>
-          <div><span style={{ color: 'var(--muted)' }}>Saldo iniziale: </span><strong>${startBalance.toLocaleString()}</strong></div>
-          <div><span style={{ color: 'var(--muted)' }}>Profit split: </span><strong>{Number(program.profitSplitPct)}%</strong></div>
+          <div><span style={{ color: 'var(--muted)' }}>Grado: </span><strong>{program.name}</strong></div>
+          <div><span style={{ color: 'var(--muted)' }}>Dotazione iniziale: </span><strong>${startBalance.toLocaleString()}</strong></div>
+          <div><span style={{ color: 'var(--muted)' }}>Quota partecipazione: </span><strong>{Number(program.profitSplitPct)}%</strong></div>
           <div><span style={{ color: 'var(--muted)' }}>Broker: </span><strong>{account.broker}</strong></div>
           <div><span style={{ color: 'var(--muted)' }}>Login: </span><strong>{account.brokerLogin}</strong></div>
-          <div><span style={{ color: 'var(--muted)' }}>Payout ogni: </span><strong>{program.payoutFrequencyDays || 7} giorni</strong></div>
+          <div><span style={{ color: 'var(--muted)' }}>Rimborso ogni: </span><strong>{program.payoutFrequencyDays || 7} giorni</strong></div>
         </div>
       </div>
 
@@ -80,9 +80,9 @@ export default function Dashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 20 }}>⏳</span>
             <div style={{ flex: 1 }}>
-              <strong>Prossimo payout disponibile fra {payoutInfo.daysLeft} giorni</strong>
+              <strong>Prossimo Rimborso Missione disponibile fra {payoutInfo.daysLeft} giorni</strong>
               <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
-                Ultima richiesta: {new Date(payoutInfo.lastRequestDate).toLocaleDateString('it-IT')} · I payout sono permessi ogni {payoutInfo.freqDays} giorni
+                Ultima richiesta: {new Date(payoutInfo.lastRequestDate).toLocaleDateString('it-IT')} · Rimborso ogni {payoutInfo.freqDays} giorni
               </div>
             </div>
           </div>
@@ -92,13 +92,13 @@ export default function Dashboard() {
         <div className="card" style={{ marginBottom: 24, padding: 16, background: 'rgba(180, 255, 57, 0.04)', border: '1px solid rgba(180, 255, 57, 0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 20 }}>💸</span>
+              <span style={{ fontSize: 20 }}>🎖</span>
               <div>
-                <strong>Sei idoneo per richiedere un payout</strong>
-                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Vai alla pagina Payout per richiederlo</div>
+                <strong>Idoneo al Rimborso Missione</strong>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>Procedi alla sezione Rimborso Missione</div>
               </div>
             </div>
-            <a href="/payout" className="btn-primary" style={{ textDecoration: 'none', padding: '8px 16px', fontSize: 13 }}>Richiedi payout →</a>
+            <a href="/payout" className="btn-primary" style={{ textDecoration: 'none', padding: '8px 16px', fontSize: 13 }}>Richiedi Rimborso →</a>
           </div>
         </div>
       )}

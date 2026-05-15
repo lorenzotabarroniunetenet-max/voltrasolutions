@@ -31,7 +31,7 @@ export default function BuyProgram() {
         <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
         <h2 className="display" style={{ margin: '0 0 12px', fontSize: 24 }}>Richiesta inviata!</h2>
         <p style={{ color: 'var(--muted)', marginBottom: 24 }}>Riceverai conferma via email entro 24h. Account attivato dopo verifica pagamento.</p>
-        <button onClick={() => { setStep('select'); setSelected(null); }} className="btn-primary">Acquista un altro programma</button>
+        <button onClick={() => { setStep('select'); setSelected(null); }} className="btn-primary">Richiedi un altro grado</button>
       </div>
     )
   }
@@ -76,27 +76,27 @@ export default function BuyProgram() {
   return (
     <div>
       <h1 className="display" style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>Promozione di Grado</h1>
-      <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 24 }}>Scegli il tuo programma</div>
+      <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 24 }}>Seleziona il tuo grado</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
         {programs.map(p => (
           <div key={p.id} className="plan-card">
-            <div style={{ fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 8 }}>{p.phase}</div>
-            <div className="display" style={{ fontSize: 48, fontWeight: 700, color: 'var(--lime)', lineHeight: 1, marginBottom: 4, letterSpacing: '-0.04em' }}>
-              ${Number(p.accountSize / 1000)}K
+            <div style={{ fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 8 }}>Grado</div>
+            <div className="display" style={{ fontSize: 36, fontWeight: 700, color: 'var(--lime)', lineHeight: 1, marginBottom: 4, letterSpacing: '-0.02em' }}>
+              {p.name}
             </div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>{p.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>Dotazione ${Number(p.accountSize / 1000)}K</div>
 
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: 13, marginBottom: 20, flex: 1 }}>
-              {p.profitTargetPct && <li style={{ padding: '6px 0' }}>{p.profitTargetPct}% profit target</li>}
-              <li style={{ padding: '6px 0' }}>{p.maxDailyLossPct}% daily loss</li>
-              <li style={{ padding: '6px 0' }}>{p.maxOverallLossPct}% max loss</li>
-              <li style={{ padding: '6px 0', color: 'var(--lime)', fontWeight: 600 }}>{p.profitSplitPct}% profit split</li>
-              <li style={{ padding: '6px 0' }}>Payout ogni {p.payoutFrequencyDays || 7} giorni</li>
+              {p.profitTargetPct && <li style={{ padding: '6px 0' }}>{p.profitTargetPct}% obiettivo missione</li>}
+              <li style={{ padding: '6px 0' }}>{p.maxDailyLossPct}% perdita giornaliera max</li>
+              <li style={{ padding: '6px 0' }}>{p.maxOverallLossPct}% perdita totale max</li>
+              <li style={{ padding: '6px 0', color: 'var(--lime)', fontWeight: 600 }}>{p.profitSplitPct}% quota partecipazione</li>
+              <li style={{ padding: '6px 0' }}>Rimborso ogni {p.payoutFrequencyDays || 7} giorni</li>
             </ul>
 
             <div className="display" style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>${Number(p.priceUsd || 0)}</div>
-            <button onClick={() => { setSelected(p); setStep('pay'); }} className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Acquista</button>
+            <button onClick={() => { setSelected(p); setStep('pay'); }} className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Richiedi Grado</button>
           </div>
         ))}
       </div>
