@@ -404,11 +404,17 @@ function UsersTab({ onSelectUser }) {
 
   const approve = async (e, id) => {
     e.stopPropagation()
-    try { await api.adminApproveUser(id); reload() } catch (err) { alert(err.message) }
+    try {
+      await api.adminApproveUser(id)
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, approved: true, approvedAt: new Date().toISOString() } : u))
+    } catch (err) { alert(err.message) }
   }
   const revoke = async (e, id) => {
     e.stopPropagation()
-    try { await api.adminRevokeUser(id); reload() } catch (err) { alert(err.message) }
+    try {
+      await api.adminRevokeUser(id)
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, approved: false, approvedAt: null } : u))
+    } catch (err) { alert(err.message) }
   }
 
   if (loading) return <div style={{ color: 'var(--muted)' }}>Caricamento...</div>
