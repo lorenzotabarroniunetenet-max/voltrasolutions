@@ -1,30 +1,29 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api.js'
 
-// Leggende dei gradi - hardcoded perché sono parte del brand
 const GRADE_LORE = {
   Caporale: {
     rank: '🎖',
-    mission: 'L\'Ultimo Avamposto',
-    legend: 'La trincea è la sua casa. Il rumore della radio è il suo orologio. Il Caporale è il primo a salire e l\'ultimo a scendere — perché finché lui tiene la linea, il reparto resiste. Nessuna gloria, solo la costanza che vince le guerre lunghe.',
+    mission: "L'Ultimo Avamposto",
+    legend: "La trincea è la sua casa. Il rumore della radio è il suo orologio. Il Caporale è il primo a salire e l'ultimo a scendere — perché finché lui tiene la linea, il reparto resiste. Nessuna gloria, solo la costanza che vince le guerre lunghe.",
     color: 'lime',
   },
   Sergente: {
     rank: '⭐',
     mission: 'Il Messaggero',
-    legend: 'Tra il fuoco e il Comando, c\'è una sola figura: il Sergente. Porta gli ordini sotto il bombardamento, riporta le perdite senza emozione, tiene gli uomini saldi quando il fronte cede. Non comanda: trasmette. E senza la sua voce, la guerra è perduta.',
+    legend: "Tra il fuoco e il Comando, c'è una sola figura: il Sergente. Porta gli ordini sotto il bombardamento, riporta le perdite senza emozione, tiene gli uomini saldi quando il fronte cede. Non comanda: trasmette. E senza la sua voce, la guerra è perduta.",
     color: 'gold',
   },
   Capitano: {
     rank: '🦅',
     mission: 'Le Acque Profonde',
-    legend: 'Si muove dove nessuno vede. Operazioni che non vengono mai dichiarate, missioni di cui nessuno scriverà la cronaca. Il Capitano agisce sul confine: dove finisce la mappa e inizia il giudizio.',
+    legend: "Si muove dove nessuno vede. Operazioni che non vengono mai dichiarate, missioni di cui nessuno scriverà la cronaca. Il Capitano agisce sul confine: dove finisce la mappa e inizia il giudizio.",
     color: 'wip',
   },
   Colonnello: {
     rank: '🎗',
-    mission: 'L\'Ultima Linea',
-    legend: 'Non porta più il fucile. Non legge più i bollettini. Il Colonnello guarda la mappa intera e decide chi rischia, chi resta, chi avanza. Le sue scelte si misurano nei decenni. Quando un Colonnello tace, l\'intero schieramento ascolta.',
+    mission: "L'Ultima Linea",
+    legend: "Non porta più il fucile. Non legge più i bollettini. Il Colonnello guarda la mappa intera e decide chi rischia, chi resta, chi avanza. Le sue scelte si misurano nei decenni. Quando un Colonnello tace, l'intero schieramento ascolta.",
     color: 'wip',
   },
 }
@@ -33,29 +32,47 @@ const VALID_GRADES = Object.keys(GRADE_LORE)
 
 export default function BuyProgram() {
   const [programs, setPrograms] = useState([])
-  const [paymentInfo, setPaymentInfo] = useState(null)
+  const [wallets, setWallets] = useState([])
   const [selected, setSelected] = useState(null)
+  const [selectedNetwork, setSelectedNetwork] = useState(null)
+  const [txHash, setTxHash] = useState('')
   const [step, setStep] = useState('select')
   const [err, setErr] = useState('')
   const [msg, setMsg] = useState('')
+  const [copied, setCopied] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     api.programs().then(d => {
-      // Mostra solo i gradi militari validi, in ordine corretto
       const filtered = d.filter(p => VALID_GRADES.includes(p.name))
       filtered.sort((a, b) => VALID_GRADES.indexOf(a.name) - VALID_GRADES.indexOf(b.name))
       setPrograms(filtered)
     }).catch(() => {})
-    api.paymentInfo().then(setPaymentInfo).catch(() => {})
+    api.paymentInfo().then(d => {
+      const list = d.wallets || []
+      setWallets(list)
+      if (list.length > 0) setSelectedNetwork(list[0].network)
+    }).catch(() => {})
   }, [])
 
+  const copy = (text, key) => {
+    navigator.clipboard.writeText(text)
+    setCopied(key)
+    setTimeout(() => setCopied(null), 1500)
+  }
+
   const requestPurchase = async () => {
-    setErr(''); setMsg('')
+    if (!txHash.trim()) { setErr('Inserire la TxHash della transazione'); return }
+    setErr(''); setMsg(''); setLoading(true)
     try {
-      await api.requestPurchase({ programId: selected.id })
-      setMsg('Richiesta inviata al Comando. Riceverai conferma a breve.')
+      await api.requestPurchase({
+        programId: selected.id,
+        network: selectedNetwork,
+        txHash: txHash.trim(),
+      })
+      setMsg('Richiesta trasmessa al Comando. Verifica entro 24 ore.')
       setStep('done')
-    } catch (e) { setErr(e.message) }
+    } catch (e) { setErr(e.message) } finally { setLoading(false) }
   }
 
   if (step === 'done') {
@@ -63,45 +80,134 @@ export default function BuyProgram() {
       <div className="card" style={{ textAlign: 'center', padding: 60, maxWidth: 520, margin: '40px auto' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🎖</div>
         <h2 className="display" style={{ margin: '0 0 12px', fontSize: 22 }}>Richiesta trasmessa</h2>
-        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>{msg}</p>
-        <button onClick={() => { setStep('select'); setSelected(null); }} className="btn-primary">Richiedi un altro grado</button>
+        <p style={{ color: 'var(--muted)', marginBottom: 24, lineHeight: 1.6 }}>{msg}</p>
+        <button onClick={() => { setStep('select'); setSelected(null); setTxHash(''); }} className="btn-primary">Torna ai gradi</button>
       </div>
     )
   }
 
   if (step === 'pay' && selected) {
     const lore = GRADE_LORE[selected.name]
-    return (
-      <div style={{ maxWidth: 560, margin: '0 auto' }}>
-        <button onClick={() => setStep('select')} className="btn-secondary" style={{ marginBottom: 20, fontSize: 13, padding: '8px 14px' }}>← Torna ai gradi</button>
-        <div className="card" style={{ padding: 32 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>{lore?.rank}</div>
-          <h2 className="display" style={{ margin: '0 0 4px', fontSize: 24 }}>{selected.name}</h2>
-          <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 20, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{lore?.mission}</div>
+    const wallet = wallets.find(w => w.network === selectedNetwork)
+    const qrUrl = wallet ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(wallet.address)}&bgcolor=0c0c0c&color=ffffff&margin=10` : null
 
-          <div style={{ padding: '20px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: 'var(--muted)', fontSize: 13 }}>Quota accesso</span>
-              <span className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>${Number(selected.priceUsd)}</span>
+    return (
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        <button onClick={() => setStep('select')} className="btn-secondary" style={{ marginBottom: 20, fontSize: 13, padding: '8px 14px' }}>← Torna ai gradi</button>
+
+        <div className="card" style={{ padding: 32 }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28, paddingBottom: 24, borderBottom: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 44 }}>{lore.rank}</div>
+            <div style={{ flex: 1 }}>
+              <h2 className="display" style={{ margin: '0 0 4px', fontSize: 26 }}>{selected.name}</h2>
+              <div style={{ color: 'var(--muted)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{lore.mission}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Quota</div>
+              <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>${Number(selected.priceUsd)}</div>
             </div>
           </div>
 
-          {paymentInfo?.paymentAddress && (
-            <div style={{ marginBottom: 20 }}>
-              <div className="label">Indirizzo di pagamento ({paymentInfo.paymentNetwork || 'USDT TRC20'})</div>
-              <div style={{ background: 'var(--surface-2)', padding: 12, borderRadius: 8, fontSize: 12, wordBreak: 'break-all', fontFamily: 'monospace', border: '1px solid var(--border)' }}>
-                {paymentInfo.paymentAddress}
-              </div>
+          {wallets.length === 0 ? (
+            <div className="card" style={{ padding: 24, background: 'rgba(255,165,2,0.06)', border: '1px solid rgba(255,165,2,0.3)', textAlign: 'center' }}>
+              <div style={{ fontSize: 24, marginBottom: 12 }}>⚠️</div>
+              <strong>Nessun indirizzo di pagamento configurato</strong>
+              <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 8 }}>
+                Il Comando deve impostare gli indirizzi wallet. Contatta il supporto tramite Linea Diretta HQ.
+              </p>
             </div>
+          ) : (
+            <>
+              {/* Network selector */}
+              <div style={{ marginBottom: 24 }}>
+                <div className="label" style={{ marginBottom: 10 }}>Seleziona network</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+                  {wallets.map(w => (
+                    <button
+                      key={w.network}
+                      onClick={() => setSelectedNetwork(w.network)}
+                      style={{
+                        padding: '12px',
+                        background: selectedNetwork === w.network ? 'rgba(180,255,57,0.08)' : 'var(--surface-2)',
+                        border: selectedNetwork === w.network ? '1px solid rgba(180,255,57,0.4)' : '1px solid var(--border)',
+                        borderRadius: 10,
+                        color: selectedNetwork === w.network ? 'var(--lime)' : 'var(--text)',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {w.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {wallet && (
+                <>
+                  {/* Amount */}
+                  <div style={{ marginBottom: 20, padding: 16, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <span className="label" style={{ margin: 0 }}>Importo da inviare</span>
+                      <button onClick={() => copy(String(Number(selected.priceUsd)), 'amount')} style={{ background: 'transparent', border: 'none', color: 'var(--lime)', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
+                        {copied === 'amount' ? 'Copiato ✓' : 'Copia'}
+                      </button>
+                    </div>
+                    <div className="display" style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>${Number(selected.priceUsd)} USD</div>
+                  </div>
+
+                  {/* QR + Address */}
+                  <div style={{ marginBottom: 20, padding: 20, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+                      {qrUrl && (
+                        <div style={{ background: '#0c0c0c', padding: 8, borderRadius: 8, flexShrink: 0 }}>
+                          <img src={qrUrl} alt="QR" style={{ display: 'block', width: 180, height: 180 }} />
+                        </div>
+                      )}
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <span className="label" style={{ margin: 0 }}>Indirizzo wallet</span>
+                          <button onClick={() => copy(wallet.address, 'address')} style={{ background: 'transparent', border: 'none', color: 'var(--lime)', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
+                            {copied === 'address' ? 'Copiato ✓' : 'Copia'}
+                          </button>
+                        </div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all', color: 'var(--text)', background: '#000', padding: 10, borderRadius: 6, border: '1px solid var(--border)', lineHeight: 1.5 }}>
+                          {wallet.address}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+                          ⚠️ Verifica il network. Invii a indirizzi sbagliati sono irrecuperabili.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TxHash input */}
+                  <div style={{ marginBottom: 20 }}>
+                    <label className="label">Hash della transazione (TxHash)</label>
+                    <input
+                      className="voltra-input"
+                      value={txHash}
+                      onChange={e => setTxHash(e.target.value)}
+                      placeholder="Es. 0xabc123... oppure TR7NHq..."
+                      style={{ fontFamily: 'monospace', fontSize: 12 }}
+                    />
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
+                      Dopo aver effettuato il pagamento, incolla qui l'hash della transazione per la verifica.
+                    </div>
+                  </div>
+
+                  {err && <div style={{ color: '#ff4757', fontSize: 13, marginBottom: 12 }}>{err}</div>}
+
+                  <button onClick={requestPurchase} disabled={loading || !txHash.trim()} className="btn-primary" style={{ width: '100%', justifyContent: 'center', opacity: (loading || !txHash.trim()) ? 0.5 : 1 }}>
+                    {loading ? 'Invio in corso...' : 'Conferma pagamento →'}
+                  </button>
+                </>
+              )}
+            </>
           )}
-
-          <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6, marginBottom: 20 }}>
-            Dopo il pagamento, conferma la richiesta. Il Comando verificherà la transazione e attiverà il grado.
-          </p>
-
-          {err && <div style={{ color: '#ff4757', fontSize: 13, marginBottom: 12 }}>{err}</div>}
-
-          <button onClick={requestPurchase} className="btn-primary" style={{ width: '100%' }}>Conferma richiesta</button>
         </div>
       </div>
     )
@@ -128,7 +234,6 @@ export default function BuyProgram() {
               display: 'flex',
               flexDirection: 'column',
             }}>
-              {/* Background rank */}
               <div style={{ position: 'absolute', top: -20, right: -10, fontSize: 110, opacity: 0.04, pointerEvents: 'none', lineHeight: 1 }}>{lore.rank}</div>
 
               {isWip && (
@@ -136,10 +241,7 @@ export default function BuyProgram() {
               )}
 
               <div style={{ fontSize: 36, marginBottom: 12 }}>{lore.rank}</div>
-
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
-                <h3 className="display" style={{ margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '0.02em', color: 'var(--text)' }}>{p.name}</h3>
-              </div>
+              <h3 className="display" style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, letterSpacing: '0.02em', color: 'var(--text)' }}>{p.name}</h3>
               <div style={{ fontSize: 11, color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 16 }}>
                 {lore.mission}
               </div>
