@@ -6,12 +6,12 @@ export default function Layout({ children }) {
   const nav = useNavigate()
   const loc = useLocation()
   const traderLinks = [
-    { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { to: '/payout', label: 'Payout', icon: '💸' },
-    { to: '/buy', label: 'Acquista', icon: '🛒' },
-    { to: '/contact', label: 'Supporto', icon: '💬' },
+    { to: '/dashboard', label: 'Quartier Generale', icon: '📊' },
+    { to: '/payout', label: 'Rimborso Missione', icon: '💸' },
+    { to: '/buy', label: 'Promozione di Grado', icon: '🎖' },
+    { to: '/contact', label: 'Linea Diretta HQ', icon: '💬' },
   ]
-  const adminLinks = [{ to: '/admin', label: 'Admin', icon: '⚙️' }]
+  const adminLinks = [{ to: '/admin', label: 'Stato Maggiore', icon: '⚙️' }]
   const links = user?.role === 'ADMIN' ? [...traderLinks, ...adminLinks] : traderLinks
   const handleLogout = () => { logout(); nav('/login') }
 
@@ -34,7 +34,7 @@ export default function Layout({ children }) {
             <div style={{ color: 'var(--text)', fontWeight: 500 }}>{user?.name}</div>
             <div style={{ color: 'var(--muted)', fontSize: 11 }}>{user?.email}</div>
           </div>
-          <button onClick={handleLogout} className="btn-secondary" style={{ width: '100%', fontSize: 13, padding: '10px' }}>Logout</button>
+          <button onClick={handleLogout} className="btn-secondary" style={{ width: '100%', fontSize: 13, padding: '10px' }}>Smobilitazione</button>
         </div>
       </aside>
       <main className="main">{children}</main>

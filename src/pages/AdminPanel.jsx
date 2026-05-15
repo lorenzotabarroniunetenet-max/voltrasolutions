@@ -37,8 +37,8 @@ export default function AdminPanel() {
         <UserDetail userId={userDetailId} back={() => setUserDetailId(null)} />
       ) : (
         <>
-          <h1 className="display" style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 4px' }}>Admin Panel</h1>
-          <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 24 }}>Controllo completo</div>
+          <h1 className="display" style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 4px' }}>Stato Maggiore</h1>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 24 }}>Comando operativo</div>
           <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
             {tabs.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} style={{
@@ -390,49 +390,86 @@ function AddAccountModal({ userId, programs, onClose, onCreated }) {
 function UsersTab({ onSelectUser }) {
   const [users, setUsers] = useState([])
   const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const reload = () => {
+    setLoading(true)
     api.adminUsers()
       .then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
-  }, [])
+  }
+  useEffect(() => { reload() }, [])
+
+  const approve = async (e, id) => {
+    e.stopPropagation()
+    try { await api.adminApproveUser(id); reload() } catch (err) { alert(err.message) }
+  }
+  const revoke = async (e, id) => {
+    e.stopPropagation()
+    try { await api.adminRevokeUser(id); reload() } catch (err) { alert(err.message) }
+  }
 
   if (loading) return <div style={{ color: 'var(--muted)' }}>Caricamento...</div>
   if (error) return <div className="card" style={{ padding: 24, color: '#ff4757' }}>Errore: {error}</div>
 
+  const pending = users.filter(u => u.emailVerified && !u.approved)
   const filtered = users.filter(u => {
-    if (!search) return true
-    const s = search.toLowerCase()
-    return (u.name || '').toLowerCase().includes(s) || (u.email || '').toLowerCase().includes(s)
+    const matchSearch = !search || (u.name || '').toLowerCase().includes(search.toLowerCase()) || (u.email || '').toLowerCase().includes(search.toLowerCase())
+    const matchFilter = filter === 'all' || (filter === 'pending' && u.emailVerified && !u.approved) || (filter === 'approved' && u.approved)
+    return matchSearch && matchFilter
   })
 
   return (
     <div>
-      <input className="voltra-input" placeholder="Cerca..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginBottom: 16, maxWidth: 400 }} />
+      {pending.length > 0 && (
+        <div className="card" style={{ marginBottom: 16, padding: 16, background: 'rgba(255,165,2,0.06)', border: '1px solid rgba(255,165,2,0.3)' }}>
+          <strong style={{ color: '#ffaa00' }}>⏳ {pending.length} richiesta{pending.length > 1 ? 'e' : ''} in attesa di approvazione</strong>
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input className="voltra-input" placeholder="Cerca..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 300 }} />
+        <select className="voltra-input" value={filter} onChange={e => setFilter(e.target.value)} style={{ width: 'auto' }}>
+          <option value="all">Tutti ({users.length})</option>
+          <option value="pending">In attesa ({pending.length})</option>
+          <option value="approved">Approvati ({users.filter(u => u.approved).length})</option>
+        </select>
+      </div>
       <div className="card" style={{ padding: 0, overflow: 'auto' }}>
         <table style={{ width: '100%', fontSize: 13 }}>
           <thead style={{ background: 'var(--surface-2)' }}>
-            <tr style={{ textAlign: 'left' }}><Th>Nome</Th><Th>Email</Th><Th>Verif.</Th><Th>Accounts</Th><Th>Payouts</Th><Th>Registrato</Th><Th></Th></tr>
+            <tr style={{ textAlign: 'left' }}><Th>Nome</Th><Th>Email</Th><Th>Stato</Th><Th>Accounts</Th><Th>Registrato</Th><Th></Th></tr>
           </thead>
           <tbody>
             {filtered.map(u => {
               const accs = Array.isArray(u.propAccounts) ? u.propAccounts : []
-              const payoutCount = u._count?.payoutRequests ?? 0
               return (
                 <tr key={u.id} style={{ borderTop: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => onSelectUser(u.id)}>
                   <Td><strong>{u.name || '—'}</strong></Td>
                   <Td>{u.email || '—'}</Td>
-                  <Td>{u.emailVerified ? '✓' : '✗'}</Td>
+                  <Td>
+                    {!u.emailVerified && <span className="badge badge-warn">Email non verificata</span>}
+                    {u.emailVerified && !u.approved && <span className="badge badge-pending">In attesa</span>}
+                    {u.approved && <span className="badge badge-success">Approvato</span>}
+                  </Td>
                   <Td>{accs.filter(a => a.status === 'ACTIVE').length}/{accs.length}</Td>
-                  <Td>{payoutCount}</Td>
                   <Td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString('it-IT') : '—'}</Td>
-                  <Td><button className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11 }}>Apri →</button></Td>
+                  <Td onClick={e => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {u.emailVerified && !u.approved && (
+                        <button onClick={e => approve(e, u.id)} className="btn-primary" style={{ padding: '4px 12px', fontSize: 11 }}>Approva</button>
+                      )}
+                      {u.approved && (
+                        <button onClick={e => revoke(e, u.id)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderColor: 'var(--red)', color: 'var(--red)' }}>Revoca</button>
+                      )}
+                      <button onClick={e => { e.stopPropagation(); onSelectUser(u.id) }} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11 }}>Apri →</button>
+                    </div>
+                  </Td>
                 </tr>
               )
             })}
-            {filtered.length === 0 && <tr><td colSpan="7" style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>Nessun utente.</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan="6" style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>Nessun utente.</td></tr>}
           </tbody>
         </table>
       </div>

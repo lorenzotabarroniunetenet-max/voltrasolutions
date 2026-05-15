@@ -35,8 +35,8 @@ export default function Contact() {
 
       <section className="section" style={{ paddingTop: 60 }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <div className="section-label">— Contatti</div>
-          <h1 className="section-title">Parliamo. <span className="accent">Siamo qui.</span></h1>
+          <div className="section-label">— Linea Diretta HQ</div>
+          <h1 className="section-title">Comunicazione <span className="accent">con il Comando.</span></h1>
           <p className="section-subtitle" style={{ margin: '16px auto 0' }}>
             Hai domande, problemi tecnici, o vuoi diventare partner? Rispondiamo entro 24 ore.
           </p>

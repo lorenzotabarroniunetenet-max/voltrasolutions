@@ -75,7 +75,7 @@ export default function BuyProgram() {
 
   return (
     <div>
-      <h1 className="display" style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>Acquista Programma</h1>
+      <h1 className="display" style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>Promozione di Grado</h1>
       <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 24 }}>Scegli il tuo programma</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>

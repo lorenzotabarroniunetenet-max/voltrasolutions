@@ -3,6 +3,7 @@ import { api } from '../lib/api.js'
 import KpiCard from '../components/KpiCard.jsx'
 import RuleBadge from '../components/RuleBadge.jsx'
 import GrowthChart from '../components/GrowthChart.jsx'
+import DailyCalendar from '../components/DailyCalendar.jsx'
 
 export default function Dashboard() {
   const [accounts, setAccounts] = useState([])
@@ -29,10 +30,10 @@ export default function Dashboard() {
   if (accounts.length === 0) {
     return (
       <div className="card" style={{ textAlign: 'center', padding: 60 }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⚡</div>
-        <h2 className="display" style={{ margin: '0 0 12px', fontSize: 24 }}>Nessun account attivo</h2>
-        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>Acquista il tuo primo programma per iniziare a tradare con Voltra.</p>
-        <a href="/buy" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }}>Acquista programma</a>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🎖</div>
+        <h2 className="display" style={{ margin: '0 0 12px', fontSize: 24 }}>Nessuna missione in corso</h2>
+        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>Scegli il tuo grado per dare inizio al servizio.</p>
+        <a href="/buy" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }}>Promozione di Grado</a>
       </div>
     )
   }
@@ -48,8 +49,8 @@ export default function Dashboard() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 className="display" style={{ margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>Dashboard</h1>
-          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>Stato del tuo account prop</div>
+          <h1 className="display" style={{ margin: 0, fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>Quartier Generale</h1>
+          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>Stato di Servizio</div>
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <select value={selectedId} onChange={e => setSelectedId(e.target.value)} className="voltra-input" style={{ width: 'auto', minWidth: 220 }}>
@@ -150,6 +151,11 @@ export default function Dashboard() {
         <GrowthChart snapshots={snapshots} account={account} program={program} />
       </div>
 
+      {/* Daily P&L Calendar */}
+      <div style={{ marginBottom: 24 }}>
+        <DailyCalendar snapshots={snapshots} account={account} />
+      </div>
+
       {/* Stats + Rules + Trading conditions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
         <div className="card">
@@ -167,7 +173,7 @@ export default function Dashboard() {
         </div>
 
         <div className="card">
-          <h3 className="display" style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>Regole del programma</h3>
+          <h3 className="display" style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>Codice di Condotta</h3>
           <table style={{ width: '100%', fontSize: 14 }}>
             <thead>
               <tr style={{ color: 'var(--muted)', textAlign: 'left', fontSize: 12, textTransform: 'uppercase' }}>

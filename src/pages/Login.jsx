@@ -32,8 +32,8 @@ export default function Login() {
           <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.05em', marginTop: 8 }}>VOLTRA</div>
         </div>
 
-        <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 600 }}>Welcome back</h1>
-        <p style={{ color: 'var(--voltra-muted)', margin: '0 0 24px', fontSize: 14 }}>Accedi al tuo account Voltra</p>
+        <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 600 }}>Accesso al Quartier Generale</h1>
+        <p style={{ color: 'var(--voltra-muted)', margin: '0 0 24px', fontSize: 14 }}>Inserisca le credenziali di servizio</p>
 
         <form onSubmit={submit}>
           <label className="voltra-label">Email</label>
@@ -45,13 +45,13 @@ export default function Login() {
           {err && <div style={{ color: '#ff4757', fontSize: 13, marginBottom: 16 }}>{err}</div>}
 
           <button type="submit" className="voltra-btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? 'Accesso...' : 'Sign in'}
+            {loading ? 'Accesso in corso...' : 'Accedi'}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: 'var(--voltra-muted)' }}>
-          Non hai un account?{' '}
-          <Link to="/register" style={{ color: 'var(--voltra-lime)', textDecoration: 'none', fontWeight: 600 }}>Sign up</Link>
+          Non sei ancora un membro?{' '}
+          <Link to="/register" style={{ color: 'var(--voltra-lime)', textDecoration: 'none', fontWeight: 600 }}>Richiedi accesso</Link>
         </div>
       </div>
     </div>
