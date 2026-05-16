@@ -511,6 +511,14 @@ function UserDetail({ userId, back }) {
     catch (e) { alert(e.message) }
   }
 
+  const deleteUser = async () => {
+    if (!confirm(`Eliminare definitivamente l'account di ${user?.name || 'questo utente'}?\n\nVerranno cancellati: profilo, dotazioni, rimborsi, log, decorazioni, notifiche, documenti.\n\nOperazione irreversibile.`)) return
+    try {
+      await api.adminDeleteUser(userId)
+      back()
+    } catch (e) { alert(e.message) }
+  }
+
   const saveSnapshot = async () => {
     try {
       if (!snapData.balance || !snapData.equity) { alert('Saldo ed Equity obbligatori'); return }
@@ -550,9 +558,10 @@ function UserDetail({ userId, back }) {
           <h1 className="display" style={{ fontSize: 28, fontWeight: 700, margin: '0 0 4px' }}>{user.name || '—'}</h1>
           <div style={{ color: 'var(--muted)', fontSize: 14 }}>{user.email || '—'} · Registrato {user.createdAt ? new Date(user.createdAt).toLocaleDateString('it-IT') : '—'}</div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span className={`badge ${user.emailVerified ? 'badge-success' : 'badge-warn'}`}>{user.emailVerified ? 'Verificato' : 'Non verificato'}</span>
           {user.kycVerifiedAt && <span className="badge badge-info">KYC OK</span>}
+          <button onClick={deleteUser} className="btn-secondary" style={{ padding: '6px 14px', fontSize: 12, borderColor: '#ff4757', color: '#ff4757' }}>Elimina account</button>
         </div>
       </div>
 
@@ -846,6 +855,14 @@ function UsersTab({ onSelectUser }) {
       setUsers(prev => prev.map(u => u.id === id ? { ...u, approved: false, approvedAt: null } : u))
     } catch (err) { alert(err.message) }
   }
+  const remove = async (e, id, name) => {
+    e.stopPropagation()
+    if (!confirm(`Eliminare definitivamente l'account di ${name || 'questo utente'}?\n\nVerranno cancellati: profilo, dotazioni, rimborsi, log, decorazioni, notifiche, documenti.\n\nOperazione irreversibile.`)) return
+    try {
+      await api.adminDeleteUser(id)
+      setUsers(prev => prev.filter(u => u.id !== id))
+    } catch (err) { alert(err.message) }
+  }
 
   if (loading) return <div style={{ color: 'var(--muted)' }}>Caricamento...</div>
   if (error) return <div className="card" style={{ padding: 24, color: '#ff4757' }}>Errore: {error}</div>
@@ -900,6 +917,7 @@ function UsersTab({ onSelectUser }) {
                         <button onClick={e => revoke(e, u.id)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderColor: 'var(--red)', color: 'var(--red)' }}>Revoca</button>
                       )}
                       <button onClick={e => { e.stopPropagation(); onSelectUser(u.id) }} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11 }}>Apri →</button>
+                      <button onClick={e => remove(e, u.id, u.name)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderColor: '#ff4757', color: '#ff4757' }} title="Elimina account definitivamente">Elimina</button>
                     </div>
                   </Td>
                 </tr>
