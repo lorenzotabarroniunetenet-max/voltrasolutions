@@ -1,16 +1,34 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { api } from '../lib/api.js'
+import { fireConfetti } from '../components/Confetti.jsx'
 
 export default function Requisiti() {
   const [data, setData] = useState(null)
   const [err, setErr] = useState('')
+  const prevAchievedRef = useRef(null)
 
   useEffect(() => {
-    api.requisiti().then(setData).catch(e => setErr(e.message))
+    api.requisiti().then(d => {
+      if (prevAchievedRef.current !== null) {
+        const newlyAchieved = d.requisiti.filter(r => r.achieved && !prevAchievedRef.current.has(r.slug))
+        if (newlyAchieved.length > 0) fireConfetti()
+      }
+      prevAchievedRef.current = new Set(d.requisiti.filter(r => r.achieved).map(r => r.slug))
+      setData(d)
+    }).catch(e => setErr(e.message))
   }, [])
 
   if (err) return <div className="card" style={{ padding: 24, color: '#ff4757' }}>Errore: {err}</div>
-  if (!data) return <div style={{ color: 'var(--muted)', padding: 40 }}>Caricamento...</div>
+  if (!data) return (
+    <div>
+      <div className="voltra-skeleton" style={{ height: 32, width: 280, marginBottom: 8, borderRadius: 6 }} />
+      <div className="voltra-skeleton" style={{ height: 14, width: 400, marginBottom: 24, borderRadius: 6 }} />
+      <div className="voltra-skeleton" style={{ height: 100, marginBottom: 24, borderRadius: 12 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {[...Array(7)].map((_, i) => <div key={i} className="voltra-skeleton" style={{ height: 80, borderRadius: 12 }} />)}
+      </div>
+    </div>
+  )
 
   const { purchaseCount, requisiti } = data
 
@@ -28,7 +46,7 @@ export default function Requisiti() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {requisiti.map(r => (
-          <div key={r.slug} className="card" style={{
+          <div key={r.slug} className="card voltra-scan-card" style={{
             padding: 20,
             opacity: r.achieved ? 1 : 0.85,
             border: r.awarded ? '1px solid rgba(180,255,57,0.4)' : r.achieved ? '1px solid rgba(180,255,57,0.2)' : '1px solid var(--border)',
@@ -39,9 +57,7 @@ export default function Requisiti() {
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
                   <h3 className="display" style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{r.name}</h3>
-                  <div style={{ fontSize: 13, color: r.achieved ? 'var(--lime)' : 'var(--muted)', fontWeight: 600 }}>
-                    {r.progress} / {r.threshold}
-                  </div>
+                  <div style={{ fontSize: 13, color: r.achieved ? 'var(--lime)' : 'var(--muted)', fontWeight: 600 }}>{r.progress} / {r.threshold}</div>
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   {r.awarded ? '✓ Conferita' : r.achieved ? 'Requisito soddisfatto — in attesa di conferimento' : `${r.threshold - r.progress} operazioni mancanti`}
@@ -55,7 +71,7 @@ export default function Requisiti() {
                 width: `${r.percentage}%`,
                 background: r.awarded ? 'var(--lime)' : r.achieved ? 'var(--lime)' : 'rgba(180,255,57,0.5)',
                 borderRadius: 999,
-                transition: 'width 0.4s ease',
+                transition: 'width 0.8s cubic-bezier(.2,.7,.3,1)',
               }} />
             </div>
           </div>

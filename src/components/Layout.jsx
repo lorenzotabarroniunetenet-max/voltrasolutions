@@ -6,6 +6,7 @@ import BootScreen from './BootScreen.jsx'
 import DailySplash from './DailySplash.jsx'
 import LiveTicker from './LiveTicker.jsx'
 import AchievementToast from './AchievementToast.jsx'
+import Crosshair from './Crosshair.jsx'
 
 // Icone SVG sobrie, militari
 const Icons = {
@@ -120,11 +121,12 @@ export default function Layout({ children }) {
       {!showBoot && <DailySplash />}
       <AchievementToast />
       <LiveTicker />
+      <Crosshair />
       <div className="app-shell" style={{ paddingBottom: 32 }}>
       {/* SIDEBAR DESKTOP */}
       <aside className="sidebar sidebar-desktop">
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, padding: '0 12px', textDecoration: 'none', color: 'inherit' }}>
-          <span style={{ fontSize: 26, color: 'var(--lime)' }}>⚡</span>
+          <span className={unreadCount > 0 ? 'voltra-bolt-pulse' : ''} style={{ fontSize: 26, color: 'var(--lime)' }}>⚡</span>
           <span className="display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.02em' }}>VOLTRA</span>
         </Link>
         <nav style={{ flex: 1 }}>
@@ -146,7 +148,7 @@ export default function Layout({ children }) {
       {/* MOBILE TOPBAR */}
       <div className="mobile-topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: 22, color: 'var(--lime)', flexShrink: 0 }}>⚡</span>
+          <span className={unreadCount > 0 ? 'voltra-bolt-pulse' : ''} style={{ fontSize: 22, color: 'var(--lime)', flexShrink: 0 }}>⚡</span>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div className="display" style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.04em', lineHeight: 1 }}>VOLTRA</div>
             {user?.name && (

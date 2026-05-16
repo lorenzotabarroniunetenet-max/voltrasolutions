@@ -78,9 +78,8 @@ export default function Fascicolo() {
         </div>
 
         {lore?.motto && (
-          <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)', fontStyle: 'italic', fontSize: 13, color: accentColor, textAlign: 'center' }}>
-            « {lore.motto} »
-            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>{lore.mottoTranslation}</div>
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)', fontStyle: 'italic', fontSize: 14, color: accentColor, textAlign: 'center' }}>
+            <TypewriterMotto motto={lore.motto} translation={lore.mottoTranslation} />
           </div>
         )}
       </div>
@@ -97,7 +96,7 @@ export default function Fascicolo() {
             {decorations.map(d => {
               const isSigillo = d.slug === 'sigillo-fondatore'
               return (
-                <div key={d.id} style={{
+                <div key={d.id} className="voltra-scan-card" style={{
                   background: isSigillo ? 'linear-gradient(135deg, rgba(232,200,74,0.15), rgba(0,0,0,0.4))' : 'var(--surface-2)',
                   border: isSigillo ? '1px solid rgba(232,200,74,0.5)' : '1px solid var(--border)',
                   borderRadius: 10,
@@ -105,6 +104,7 @@ export default function Fascicolo() {
                   textAlign: 'center',
                   position: 'relative',
                   boxShadow: isSigillo ? '0 0 24px rgba(232,200,74,0.15)' : 'none',
+                  overflow: 'hidden',
                 }}>
                   {isSigillo && <div style={{ position: 'absolute', top: 4, right: 6, fontSize: 9, color: '#E8C84A', fontWeight: 700, letterSpacing: '0.1em' }}>RARO</div>}
                   <div style={{ fontSize: 28, marginBottom: 8, filter: isSigillo ? 'drop-shadow(0 0 8px rgba(232,200,74,0.5))' : 'none' }}>{d.iconKey}</div>
@@ -155,5 +155,34 @@ export default function Fascicolo() {
         )}
       </div>
     </div>
+  )
+}
+
+function TypewriterMotto({ motto, translation }) {
+  const [text, setText] = useState('')
+  const [done, setDone] = useState(false)
+  const [showTrans, setShowTrans] = useState(false)
+
+  useEffect(() => {
+    setText(''); setDone(false); setShowTrans(false)
+    let i = 0
+    const tick = () => {
+      if (i < motto.length) {
+        setText(motto.slice(0, i + 1))
+        i++
+        setTimeout(tick, 80)
+      } else {
+        setDone(true)
+        setTimeout(() => setShowTrans(true), 400)
+      }
+    }
+    tick()
+  }, [motto])
+
+  return (
+    <>
+      <span className={done ? 'voltra-typewriter done' : 'voltra-typewriter'}>« {text} »</span>
+      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6, opacity: showTrans ? 1 : 0, transition: 'opacity 0.6s' }}>{translation}</div>
+    </>
   )
 }

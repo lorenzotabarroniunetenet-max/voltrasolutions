@@ -586,3 +586,107 @@ button { font-family: inherit; cursor: pointer; }
 
   table { font-size: 12px; }
 }
+
+/* ===== EFFETTI WOW v3.9.3 ===== */
+
+/* Skeleton shimmer */
+.voltra-skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 0%, #252525 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: voltraShimmer 1.5s linear infinite;
+}
+@keyframes voltraShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Scan line su card decorazioni */
+.voltra-scan-card {
+  position: relative;
+  overflow: hidden;
+}
+.voltra-scan-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--lime), transparent);
+  box-shadow: 0 0 20px var(--lime), 0 0 40px var(--lime);
+  animation: voltraScanLine 8s ease-in-out infinite;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+}
+.voltra-scan-card:nth-child(2)::before { animation-delay: 2s; }
+.voltra-scan-card:nth-child(3)::before { animation-delay: 4s; }
+.voltra-scan-card:nth-child(4)::before { animation-delay: 6s; }
+.voltra-scan-card:nth-child(5)::before { animation-delay: 1s; }
+.voltra-scan-card:nth-child(6)::before { animation-delay: 3s; }
+.voltra-scan-card:nth-child(7)::before { animation-delay: 5s; }
+@keyframes voltraScanLine {
+  0% { left: -10%; }
+  100% { left: 110%; }
+}
+
+/* Bolt pulse quando notifiche non lette */
+.voltra-bolt-pulse {
+  animation: voltraBoltPulse 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px var(--lime));
+}
+@keyframes voltraBoltPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px var(--lime)); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 16px var(--lime)); }
+}
+
+/* Typewriter cursor */
+.voltra-typewriter::after {
+  content: '|';
+  color: var(--lime);
+  animation: voltraBlink 1s steps(2) infinite;
+  margin-left: 2px;
+}
+.voltra-typewriter.done::after { content: ''; }
+@keyframes voltraBlink { 50% { opacity: 0; } }
+
+/* Radar background per dashboard */
+.voltra-radar-bg {
+  position: relative;
+  overflow: hidden;
+}
+.voltra-radar-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, transparent 0%, transparent 18%, rgba(180,255,57,0.03) 18%, transparent 19%),
+    radial-gradient(circle at center, transparent 0%, transparent 35%, rgba(180,255,57,0.03) 35%, transparent 36%),
+    radial-gradient(circle at center, transparent 0%, transparent 55%, rgba(180,255,57,0.03) 55%, transparent 56%),
+    radial-gradient(circle at center, transparent 0%, transparent 78%, rgba(180,255,57,0.03) 78%, transparent 79%);
+  pointer-events: none;
+  z-index: 0;
+}
+.voltra-radar-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(180,255,57,0.06) 30deg, transparent 60deg, transparent 360deg);
+  animation: voltraRadarSweep 6s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.voltra-radar-bg > * { position: relative; z-index: 1; }
+@keyframes voltraRadarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Crosshair cursor area — nasconde il cursore di default solo nell'area membri (non landing/login) */
+.app-shell { cursor: none; }
+.app-shell a, .app-shell button, .app-shell input, .app-shell textarea, .app-shell select, .app-shell [role="button"] { cursor: none; }
+@media (pointer: coarse) {
+  .app-shell { cursor: auto; }
+  .app-shell a, .app-shell button, .app-shell input, .app-shell textarea, .app-shell select { cursor: pointer; }
+  .app-shell input[type="text"], .app-shell input[type="email"], .app-shell input[type="password"], .app-shell textarea { cursor: text; }
+}
