@@ -42,10 +42,14 @@ export default function BuyProgram() {
   const [programs, setPrograms] = useState([])
   const [wallets, setWallets] = useState([])
   const [telegramUrl, setTelegramUrl] = useState('')
+  const [telegramHandle, setTelegramHandle] = useState('')
   const [selected, setSelected] = useState(null)
   const [selectedNetwork, setSelectedNetwork] = useState(null)
+  const [txHash, setTxHash] = useState('')
   const [step, setStep] = useState('select')
   const [copied, setCopied] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [err, setErr] = useState('')
 
   useEffect(() => {
     api.programs().then(d => {
@@ -58,6 +62,7 @@ export default function BuyProgram() {
       setWallets(list)
       if (list.length > 0) setSelectedNetwork(list[0].network)
       if (d.telegramUrl) setTelegramUrl(d.telegramUrl)
+      if (d.telegramHandle) setTelegramHandle(d.telegramHandle)
     }).catch(() => {})
   }, [])
 
@@ -65,6 +70,32 @@ export default function BuyProgram() {
     navigator.clipboard.writeText(text)
     setCopied(key)
     setTimeout(() => setCopied(null), 1500)
+  }
+
+  const confirmPayment = async () => {
+    if (!txHash.trim()) { setErr('Inserisci la TxHash della transazione'); return }
+    setErr(''); setSubmitting(true)
+    try {
+      await api.requestPurchase({
+        programId: selected.id,
+        network: selectedNetwork,
+        txHash: txHash.trim(),
+      })
+      setStep('done')
+    } catch (e) { setErr(e.message) } finally { setSubmitting(false) }
+  }
+
+  if (step === 'done') {
+    return (
+      <div className="card" style={{ textAlign: 'center', padding: 60, maxWidth: 520, margin: '40px auto' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🎖</div>
+        <h2 className="display" style={{ margin: '0 0 12px', fontSize: 22 }}>Pagamento registrato</h2>
+        <p style={{ color: 'var(--muted)', marginBottom: 24, lineHeight: 1.6 }}>
+          La TxHash è stata trasmessa al Comando. Riceverai conferma a breve sul canale Telegram.
+        </p>
+        <button onClick={() => { setStep('select'); setSelected(null); setTxHash(''); setErr(''); }} className="btn-primary">Torna ai gradi</button>
+      </div>
+    )
   }
 
   if (step === 'pay' && selected) {
@@ -165,28 +196,53 @@ export default function BuyProgram() {
                     </div>
                   </div>
 
-                  {/* Telegram instructions */}
-                  <div style={{ padding: 20, background: 'rgba(180,255,57,0.04)', border: '1px solid rgba(180,255,57,0.25)', borderRadius: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
-                      <TelegramIcon size={22} color="var(--lime)" />
-                      <div>
-                        <strong style={{ color: 'var(--text)', display: 'block', marginBottom: 6 }}>Dopo il pagamento</strong>
-                        <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6, margin: 0 }}>
-                          Invia la ricevuta della transazione sul canale Telegram dedicato. Il Comando attiverà il tuo grado.
-                        </p>
-                      </div>
-                    </div>
-                    {telegramUrl ? (
-                      <a href={telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ width: '100%', justifyContent: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <TelegramIcon size={16} color="#000" />
-                        Apri Telegram →
+                  {/* Telegram handle */}
+                  {(telegramHandle || telegramUrl) && (
+                    <div style={{ marginBottom: 20, padding: 16, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                      <div className="label" style={{ marginBottom: 10 }}>Invia la ricevuta a</div>
+                      <a
+                        href={telegramUrl || `https://t.me/${(telegramHandle || '').replace('@','')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: '#000', border: '1px solid var(--border)', borderRadius: 8, textDecoration: 'none', transition: 'border-color 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(180,255,57,0.4)'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                      >
+                        <TelegramIcon size={22} color="#229ED9" />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ color: 'var(--text)', fontSize: 14, fontWeight: 600 }}>{telegramHandle || 'Apri canale Telegram'}</div>
+                          <div style={{ color: 'var(--muted)', fontSize: 11 }}>Tocca per aprire la chat</div>
+                        </div>
+                        <span style={{ color: 'var(--lime)', fontSize: 13 }}>→</span>
                       </a>
-                    ) : (
-                      <div style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center', padding: 8 }}>
-                        Canale Telegram non configurato. Contatta il Comando.
-                      </div>
-                    )}
+                    </div>
+                  )}
+
+                  {/* TxHash + Confirm */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label className="label">Hash della transazione (TxHash)</label>
+                    <input
+                      className="voltra-input"
+                      value={txHash}
+                      onChange={e => setTxHash(e.target.value)}
+                      placeholder="Es. 0xabc123... oppure TR7NHq..."
+                      style={{ fontFamily: 'monospace', fontSize: 12 }}
+                    />
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
+                      Dopo aver effettuato il pagamento, incolla qui l'hash della transazione.
+                    </div>
                   </div>
+
+                  {err && <div style={{ color: '#ff4757', fontSize: 13, marginBottom: 12 }}>{err}</div>}
+
+                  <button
+                    onClick={confirmPayment}
+                    disabled={submitting || !txHash.trim()}
+                    className="btn-primary"
+                    style={{ width: '100%', justifyContent: 'center', opacity: (submitting || !txHash.trim()) ? 0.5 : 1, cursor: (submitting || !txHash.trim()) ? 'not-allowed' : 'pointer' }}
+                  >
+                    {submitting ? 'Invio in corso...' : 'Conferma pagamento →'}
+                  </button>
                 </>
               )}
             </>
