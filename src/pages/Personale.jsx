@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { api } from '../lib/api.js'
 import { GRADE_LORE } from '../lib/lore.js'
+import { isGunshotEnabled, setGunshotEnabled } from '../components/Gunshot.jsx'
 
 export default function Personale() {
   const { user, logout } = useAuth()
@@ -11,6 +12,7 @@ export default function Personale() {
   const nav = useNavigate()
   const [dossier, setDossier] = useState(null)
   const [showInAlbo, setShowInAlbo] = useState(true)
+  const [gunshot, setGunshot] = useState(isGunshotEnabled())
 
   useEffect(() => {
     api.dossier().then(d => {
@@ -149,6 +151,11 @@ export default function Personale() {
       <Section title="Sicurezza">
         <SectionItem to="/cambio-password" icon="🔐" label="Cambia credenziale" />
         <SectionItem to="/sicurezza-accesso" icon="🔒" label="Verifica via email (2FA)" />
+        <SectionItem
+          icon="◎"
+          label="Effetto sparo al click"
+          trailing={<Toggle value={gunshot} onChange={v => { setGunshot(v); setGunshotEnabled(v) }} />}
+        />
       </Section>
 
       <Section title="Voltra">

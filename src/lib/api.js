@@ -23,6 +23,8 @@ export const api = {
   resendVerify: (email) => request('/api/auth/resend-verify', { method: 'POST', body: JSON.stringify({ email }) }),
   forgotPassword: (email) => request('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
   resetPassword: (token, password) => request('/api/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) }),
+  publicFeatures: () => request('/api/public/features'),
+  supportTicket: (data) => request('/api/contact/ticket', { method: 'POST', body: JSON.stringify(data) }),
   me: () => request('/api/auth/me'),
 
   myAccounts: () => request('/api/prop/accounts'),

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api.js'
+import Tooltip from '../components/Tooltip.jsx'
 import { useSonar } from '../context/SonarContext.jsx'
 
 function TelegramIcon({ size = 20, color = 'currentColor' }) {
@@ -289,7 +290,10 @@ export default function BuyProgram() {
 
                   {/* TxHash + Confirm */}
                   <div style={{ marginBottom: 16 }}>
-                    <label className="label">Hash della transazione (TxHash)</label>
+                    <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
+                      Hash della transazione (TxHash)
+                      <Tooltip text="È il codice univoco della transazione blockchain. Lo trovi nel tuo wallet (MetaMask, Trust Wallet, ecc.) cliccando sulla transazione appena effettuata. Inizia con 0x... su ETH/USDT-ERC20, oppure con caratteri alfanumerici su TRC20/Solana." />
+                    </label>
                     <input
                       className="voltra-input"
                       value={txHash}

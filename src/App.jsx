@@ -57,6 +57,12 @@ function PrivateRoute({ children, admin }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    api.publicFeatures()
+      .then(f => { window.__voltraGunshotDisabled = !!f.gunshotDisabled })
+      .catch(() => {})
+  }, [])
+
   return (
     <>
       <RouteSweep />

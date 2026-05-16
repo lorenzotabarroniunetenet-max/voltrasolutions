@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../lib/api.js'
 
 function TelegramIcon({ size = 20, color = 'currentColor' }) {
@@ -10,89 +10,200 @@ function TelegramIcon({ size = 20, color = 'currentColor' }) {
   )
 }
 
+const FAQ = [
+  {
+    q: 'Come funziona la Promozione di Grado?',
+    a: 'Si seleziona il grado desiderato (Caporale o Sergente al momento), si effettua il pagamento crypto all\'indirizzo wallet del Comando, si carica la ricevuta sul canale Telegram dedicato. Il Comando verifica e attiva il grado entro 24 ore.'
+  },
+  {
+    q: 'Cos\'è la TxHash e dove la trovo?',
+    a: 'È l\'hash univoco della transazione blockchain. Lo trovi nel tuo wallet (es. MetaMask, Trust Wallet) cliccando sulla transazione appena effettuata. Inizia con "0x..." per ETH/USDT-ERC20, oppure con caratteri alfanumerici per TRC20/Solana.'
+  },
+  {
+    q: 'Cosa succede se sbaglio TxHash?',
+    a: 'Niente di grave. Il Comando verifica manualmente le transazioni in entrata sul wallet. Se la TxHash è errata, basta inviare quella corretta sul canale Telegram pagamenti.'
+  },
+  {
+    q: 'Posso usare una crypto diversa da USDT?',
+    a: 'Sì. Sono accettati USDT (TRC20 / ERC20), USDC (ERC20 / Solana), BTC ed ETH. L\'importo è sempre fissato in USD: il valore equivalente nella crypto scelta viene calcolato al momento dell\'invio.'
+  },
+  {
+    q: 'Le operazioni concluse fanno scattare automaticamente le onorificenze?',
+    a: 'No. Il raggiungimento di una soglia rende il requisito "soddisfatto" ma il conferimento dell\'onorificenza resta a discrezione del Comando, valutato sul merito complessivo.'
+  },
+  {
+    q: 'Posso essere promosso di grado senza pagare?',
+    a: 'Le promozioni di grado sono decise unilateralmente dal Comando in base a valutazioni interne. Il pagamento riguarda l\'accesso iniziale a un grado disponibile, non avanzamenti successivi.'
+  },
+  {
+    q: 'Come elimino il mio account?',
+    a: 'Dalla sezione Personale → Sicurezza, oppure scrivendo al Comando tramite ticket di supporto. La cancellazione è definitiva e rimuove profilo, onorificenze, fascicolo e log di servizio.'
+  },
+  {
+    q: 'Quanto tempo serve per ricevere risposta a un ticket?',
+    a: 'Il Comando risponde entro 24 ore dall\'invio del ticket. Per urgenze, contattare direttamente il canale Telegram supporto.'
+  },
+]
+
+const CATEGORIES = [
+  { value: 'pagamento', label: 'Pagamento', emoji: '💰' },
+  { value: 'tecnico', label: 'Tecnico', emoji: '🔧' },
+  { value: 'onorificenze', label: 'Onorificenze', emoji: '🎖' },
+  { value: 'grado', label: 'Grado', emoji: '⭐' },
+  { value: 'altro', label: 'Altro', emoji: '◈' },
+]
+
 export default function Contact() {
+  const { user } = useAuth()
   const [info, setInfo] = useState({ supportEmail: '', telegramUrl: '', telegramHandle: '' })
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [openFAQ, setOpenFAQ] = useState(null)
+  const [ticket, setTicket] = useState({ category: 'tecnico', subject: '', message: '' })
+  const [submitting, setSubmitting] = useState(false)
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
-  const [loading, setLoading] = useState(false)
 
   useEffect(() => { api.contactInfo().then(setInfo).catch(() => {}) }, [])
 
-  const submit = async (e) => {
+  const submitTicket = async (e) => {
     e.preventDefault()
-    setErr(''); setMsg(''); setLoading(true)
+    setErr(''); setMsg(''); setSubmitting(true)
     try {
-      const r = await api.sendContact(form)
+      const r = await api.supportTicket(ticket)
       setMsg(r.message)
-      setForm({ name: '', email: '', subject: '', message: '' })
-    } catch (e) { setErr(e.message) } finally { setLoading(false) }
+      setTicket({ category: 'tecnico', subject: '', message: '' })
+    } catch (e) { setErr(e.message) } finally { setSubmitting(false) }
   }
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
-      <header style={{ padding: '20px 32px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 26, color: 'var(--lime)' }}>⚡</span>
-            <span className="display" style={{ fontSize: 22, fontWeight: 700 }}>VOLTRA</span>
-          </Link>
-          <Link to="/" className="btn-secondary" style={{ padding: '10px 18px', fontSize: 14 }}>← Home</Link>
-        </div>
-      </header>
+    <div style={{ maxWidth: 880, margin: '0 auto' }}>
+      <h1 className="display" style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>Linea Diretta HQ</h1>
+      <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 28 }}>Canale di comunicazione diretta con il Comando.</div>
 
-      <section className="section" style={{ paddingTop: 60 }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <div className="section-label">— Linea Diretta HQ</div>
-          <h1 className="section-title">Comunicazione <span className="accent">con il Comando.</span></h1>
-          <p className="section-subtitle" style={{ margin: '16px auto 0' }}>
-            Hai domande, problemi tecnici, o vuoi diventare partner? Rispondiamo entro 24 ore.
-          </p>
-        </div>
+      {/* Telegram quick access */}
+      {info.telegramUrl && (
+        <a href={info.telegramUrl} target="_blank" rel="noopener noreferrer" className="card card-glow" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 20, textDecoration: 'none', color: 'inherit', marginBottom: 24, border: '1px solid rgba(180,255,57,0.25)' }}>
+          <TelegramIcon size={36} color="#229ED9" />
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
+              <strong style={{ fontSize: 16 }}>Canale Telegram supporto</strong>
+              <span className="badge badge-lime">Più veloce</span>
+            </div>
+            <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4 }}>{info.telegramHandle || 'Apri chat'} — risposta in pochi minuti</div>
+          </div>
+          <span style={{ color: 'var(--lime)' }}>→</span>
+        </a>
+      )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {info.telegramUrl && (
-              <a href={info.telegramUrl} target="_blank" rel="noopener noreferrer" className="card card-glow" style={{ display: 'block', padding: 24, textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                  <TelegramIcon size={32} color="var(--lime)" />
-                  <span className="badge badge-lime">Più veloce</span>
+      {/* FAQ */}
+      <div style={{ marginBottom: 32 }}>
+        <h2 className="display" style={{ fontSize: 18, marginBottom: 12, color: 'var(--text)' }}>Domande Ricorrenti</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {FAQ.map((item, i) => (
+            <div key={i} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              <button
+                onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text)',
+                  textAlign: 'left',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 12,
+                  fontFamily: 'inherit',
+                }}
+              >
+                <span>{item.q}</span>
+                <span style={{ color: 'var(--lime)', fontSize: 18, transition: 'transform 0.2s', transform: openFAQ === i ? 'rotate(45deg)' : 'rotate(0deg)' }}>+</span>
+              </button>
+              {openFAQ === i && (
+                <div style={{ padding: '0 18px 16px', fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+                  {item.a}
                 </div>
-                <h3 className="display" style={{ fontSize: 20, fontWeight: 600, marginBottom: 6 }}>Telegram</h3>
-                <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 12 }}>Chat diretta con il team. Risposta in pochi minuti.</p>
-                <div style={{ color: 'var(--lime)', fontSize: 13, fontWeight: 600 }}>{info.telegramHandle || 'Apri chat'} →</div>
-              </a>
-            )}
-            {info.supportEmail && (
-              <a href={`mailto:${info.supportEmail}`} className="card card-glow" style={{ display: 'block', padding: 24, textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ marginBottom: 16, fontSize: 32 }}>📧</div>
-                <h3 className="display" style={{ fontSize: 20, fontWeight: 600, marginBottom: 6 }}>Email diretta</h3>
-                <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 12 }}>Per richieste dettagliate o documenti.</p>
-                <div style={{ color: 'var(--lime)', fontSize: 13, fontWeight: 600 }}>{info.supportEmail} →</div>
-              </a>
-            )}
-          </div>
-
-          <div className="card" style={{ padding: 32 }}>
-            <h3 className="display" style={{ fontSize: 20, fontWeight: 600, marginBottom: 6 }}>Form contatto</h3>
-            <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 24 }}>Compila e ti rispondiamo via email.</p>
-
-            <form onSubmit={submit}>
-              <label className="label">Nome</label>
-              <input className="voltra-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required style={{ marginBottom: 14 }} />
-              <label className="label">Email</label>
-              <input className="voltra-input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required style={{ marginBottom: 14 }} />
-              <label className="label">Oggetto</label>
-              <input className="voltra-input" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} placeholder="Es. Domanda sul programma 25K" style={{ marginBottom: 14 }} />
-              <label className="label">Messaggio</label>
-              <textarea className="voltra-input" value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} required rows={5} style={{ marginBottom: 16, resize: 'vertical', fontFamily: 'inherit' }} />
-              {err && <div style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12 }}>{err}</div>}
-              {msg && <div style={{ color: 'var(--lime)', fontSize: 13, marginBottom: 12 }}>{msg}</div>}
-              <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={loading}>{loading ? 'Invio...' : 'Invia messaggio'}</button>
-            </form>
-          </div>
+              )}
+            </div>
+          ))}
         </div>
-      </section>
+      </div>
+
+      {/* Support ticket form (solo loggati) */}
+      {user ? (
+        <div className="card" style={{ padding: 24 }}>
+          <h2 className="display" style={{ fontSize: 18, marginBottom: 4, color: 'var(--text)' }}>Apri Ticket Supporto</h2>
+          <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>
+            Per richieste strutturate. Il ticket viene tracciato e ricevi risposta entro 24 ore.
+          </div>
+
+          {msg ? (
+            <div style={{ padding: 16, background: 'rgba(180,255,57,0.06)', border: '1px solid rgba(180,255,57,0.25)', borderRadius: 10, color: 'var(--lime)', fontSize: 14 }}>
+              {msg}
+              <div style={{ marginTop: 10 }}>
+                <button onClick={() => setMsg('')} className="btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}>Apri un altro ticket</button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={submitTicket}>
+              <label className="label">Categoria</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8, marginBottom: 16 }}>
+                {CATEGORIES.map(c => (
+                  <button
+                    type="button"
+                    key={c.value}
+                    onClick={() => setTicket({ ...ticket, category: c.value })}
+                    style={{
+                      padding: 12,
+                      background: ticket.category === c.value ? 'rgba(180,255,57,0.08)' : 'var(--surface-2)',
+                      border: ticket.category === c.value ? '1px solid rgba(180,255,57,0.4)' : '1px solid var(--border)',
+                      borderRadius: 10,
+                      color: ticket.category === c.value ? 'var(--lime)' : 'var(--text)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <div style={{ fontSize: 18, marginBottom: 4 }}>{c.emoji}</div>
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+
+              <label className="label">Oggetto</label>
+              <input className="voltra-input" value={ticket.subject} onChange={e => setTicket({ ...ticket, subject: e.target.value })} required minLength={3} maxLength={120} placeholder="Sintesi del problema" style={{ marginBottom: 16 }} />
+
+              <label className="label">Messaggio</label>
+              <textarea className="voltra-input" value={ticket.message} onChange={e => setTicket({ ...ticket, message: e.target.value })} required minLength={10} maxLength={2000} placeholder="Descrivi nel dettaglio. Indica TxHash, screenshot, contesto." rows={6} style={{ marginBottom: 16, resize: 'vertical', fontFamily: 'inherit' }} />
+
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 16 }}>
+                Inviato come: <strong>{user.name}</strong> ({user.email})
+              </div>
+
+              {err && <div style={{ color: '#ff4757', fontSize: 13, marginBottom: 12 }}>{err}</div>}
+
+              <button type="submit" className="btn-primary" disabled={submitting} style={{ width: '100%' }}>
+                {submitting ? 'Trasmissione...' : 'Trasmetti ticket al Comando'}
+              </button>
+            </form>
+          )}
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 24, textAlign: 'center', color: 'var(--muted)' }}>
+          Per aprire un ticket strutturato, effettua l'accesso al Quartier Generale.
+        </div>
+      )}
+
+      {info.supportEmail && (
+        <div style={{ marginTop: 24, padding: 16, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
+          Email diretta: <a href={`mailto:${info.supportEmail}`} style={{ color: 'var(--lime)', textDecoration: 'none' }}>{info.supportEmail}</a>
+        </div>
+      )}
     </div>
   )
 }

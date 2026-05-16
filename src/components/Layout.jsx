@@ -7,6 +7,7 @@ import DailySplash from './DailySplash.jsx'
 import LiveTicker from './LiveTicker.jsx'
 import AchievementToast from './AchievementToast.jsx'
 import Crosshair from './Crosshair.jsx'
+import Gunshot from './Gunshot.jsx'
 
 // Icone SVG sobrie, militari
 const Icons = {
@@ -122,6 +123,7 @@ export default function Layout({ children }) {
       <AchievementToast />
       <LiveTicker />
       <Crosshair />
+      <Gunshot />
       <div className="app-shell" style={{ paddingBottom: 32 }}>
       {/* SIDEBAR DESKTOP */}
       <aside className="sidebar sidebar-desktop">

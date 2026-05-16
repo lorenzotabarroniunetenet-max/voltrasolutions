@@ -1614,6 +1614,9 @@ function SettingsTab() {
       { key: 'PAYMENT_ADDRESS', label: 'Indirizzo wallet' },
       { key: 'PAYMENT_NETWORK', label: 'Network' },
     ]},
+    { title: 'Effetti', items: [
+      { key: 'GUNSHOT_DISABLED', label: 'Disabilita effetto sparo globalmente', help: 'Mettere "true" per disattivare per TUTTI gli utenti. "false" lascia decidere a ciascuno dalle proprie impostazioni.', type: 'toggle' },
+    ]},
   ]
 
   const save = async () => {
@@ -1638,7 +1641,24 @@ function SettingsTab() {
           {g.items.map(item => (
             <div key={item.key} style={{ marginBottom: 16 }}>
               <label className="label">{item.label}</label>
-              <input className="voltra-input" value={edit[item.key] || ''} onChange={e => setEdit({ ...edit, [item.key]: e.target.value })} placeholder={item.help || ''} />
+              {item.type === 'toggle' ? (
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <button
+                    type="button"
+                    onClick={() => setEdit({ ...edit, [item.key]: 'false' })}
+                    className={(edit[item.key] || 'false') === 'false' ? 'btn-primary' : 'btn-secondary'}
+                    style={{ padding: '8px 16px', fontSize: 13 }}
+                  >Attivo per tutti</button>
+                  <button
+                    type="button"
+                    onClick={() => setEdit({ ...edit, [item.key]: 'true' })}
+                    className={(edit[item.key] || 'false') === 'true' ? 'btn-primary' : 'btn-secondary'}
+                    style={{ padding: '8px 16px', fontSize: 13 }}
+                  >Disabilitato per tutti</button>
+                </div>
+              ) : (
+                <input className="voltra-input" value={edit[item.key] || ''} onChange={e => setEdit({ ...edit, [item.key]: e.target.value })} placeholder={item.help || ''} />
+              )}
               {item.help && <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 4 }}>{item.help}</div>}
             </div>
           ))}
