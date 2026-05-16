@@ -11,6 +11,7 @@ import ForgotPassword from './pages/ForgotPassword.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
 import Personale from './pages/Personale.jsx'
 import Fascicolo from './pages/Fascicolo.jsx'
+import Requisiti from './pages/Requisiti.jsx'
 import SalaBriefing from './pages/SalaBriefing.jsx'
 import AlboOnore from './pages/AlboOnore.jsx'
 import Documenti from './pages/Documenti.jsx'
@@ -72,6 +73,7 @@ export default function App() {
       <Route path="/buy" element={<PrivateRoute><Layout><BuyProgram /></Layout></PrivateRoute>} />
       <Route path="/personale" element={<PrivateRoute><Layout><Personale /></Layout></PrivateRoute>} />
       <Route path="/fascicolo" element={<PrivateRoute><Layout><Fascicolo /></Layout></PrivateRoute>} />
+      <Route path="/requisiti" element={<PrivateRoute><Layout><Requisiti /></Layout></PrivateRoute>} />
       <Route path="/briefing" element={<PrivateRoute><Layout><SalaBriefing /></Layout></PrivateRoute>} />
       <Route path="/albo" element={<PrivateRoute><Layout><AlboOnore /></Layout></PrivateRoute>} />
       <Route path="/documenti" element={<PrivateRoute><Layout><Documenti /></Layout></PrivateRoute>} />

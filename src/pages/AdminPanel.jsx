@@ -567,6 +567,13 @@ function UserDetail({ userId, back }) {
 
       <div className="card" style={{ marginBottom: 20, padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>📊 Operazioni concluse</h3>
+        </div>
+        <PurchaseCounter userId={userId} current={user.purchaseCount || 0} onChange={reload} />
+      </div>
+
+      <div className="card" style={{ marginBottom: 20, padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>🎖 Gestione grado e onorificenze</h3>
         </div>
         <ManageRankAndDecorations userId={userId} currentRank={user.rank || 'Caporale'} onChange={reload} />
@@ -1681,6 +1688,82 @@ function Info({ label, value }) {
     <div>
       <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 14, fontWeight: 600 }}>{value}</div>
+    </div>
+  )
+}
+
+function PurchaseCounter({ userId, current, onChange }) {
+  const [count, setCount] = useState(current)
+  const [editing, setEditing] = useState(false)
+  const [val, setVal] = useState(current)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { setCount(current); setVal(current) }, [current])
+
+  const THRESHOLDS = [
+    { name: 'Compiacimento', t: 3 },
+    { name: 'Elogio', t: 6 },
+    { name: 'Stella di Bronzo', t: 15 },
+    { name: 'Encomio Semplice', t: 17 },
+    { name: 'Stella di Argento', t: 30 },
+    { name: 'Encomio Solenne', t: 40 },
+    { name: 'Stella d\'Oro', t: 60 },
+  ]
+  const next = THRESHOLDS.find(x => x.t > count)
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      const n = Number(val)
+      if (isNaN(n) || n < 0) throw new Error('Valore non valido')
+      await api.adminSetPurchases(userId, n)
+      setCount(n)
+      setEditing(false)
+      onChange?.()
+    } catch (e) { alert(e.message) }
+    finally { setSaving(false) }
+  }
+
+  const adjust = async (delta) => {
+    setSaving(true)
+    try {
+      const n = Math.max(0, count + delta)
+      await api.adminSetPurchases(userId, n)
+      setCount(n)
+      setVal(n)
+      onChange?.()
+    } catch (e) { alert(e.message) }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
+        <div>
+          <div className="display" style={{ fontSize: 36, fontWeight: 700, color: 'var(--lime)', lineHeight: 1 }}>{count}</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4 }}>Operazioni concluse</div>
+        </div>
+        {next && (
+          <div style={{ flex: 1, minWidth: 200, padding: '8px 14px', background: 'var(--surface-2)', borderRadius: 8, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>Prossima soglia</div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{next.name} — {next.t - count} a soglia</div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button onClick={() => adjust(-1)} disabled={saving || count === 0} className="btn-secondary" style={{ padding: '6px 14px', fontSize: 12 }}>−1</button>
+        <button onClick={() => adjust(+1)} disabled={saving} className="btn-secondary" style={{ padding: '6px 14px', fontSize: 12 }}>+1</button>
+        {editing ? (
+          <>
+            <input className="voltra-input" type="number" value={val} onChange={e => setVal(e.target.value)} style={{ width: 100, padding: '6px 10px', fontSize: 13 }} />
+            <button onClick={save} disabled={saving} className="btn-primary" style={{ padding: '6px 14px', fontSize: 12 }}>{saving ? '...' : 'Salva'}</button>
+            <button onClick={() => { setEditing(false); setVal(count) }} className="btn-secondary" style={{ padding: '6px 14px', fontSize: 12 }}>Annulla</button>
+          </>
+        ) : (
+          <button onClick={() => setEditing(true)} className="btn-secondary" style={{ padding: '6px 14px', fontSize: 12 }}>Imposta manualmente</button>
+        )}
+      </div>
     </div>
   )
 }
