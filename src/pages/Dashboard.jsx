@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../lib/api.js'
 import KpiCard from '../components/KpiCard.jsx'
 import RuleBadge from '../components/RuleBadge.jsx'
@@ -10,6 +11,9 @@ export default function Dashboard() {
   const [selectedId, setSelectedId] = useState(null)
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [latestBriefing, setLatestBriefing] = useState(null)
+  const [securityStatus, setSecurityStatus] = useState(null)
+  const [nudgeHidden, setNudgeHidden] = useState(false)
 
   useEffect(() => {
     api.myAccounts().then(accs => {
@@ -17,7 +21,16 @@ export default function Dashboard() {
       if (accs.length > 0) setSelectedId(accs[0].id)
       else setLoading(false)
     }).catch(() => setLoading(false))
+    api.briefingLatest().then(setLatestBriefing).catch(() => {})
+    api.email2faStatus().then(setSecurityStatus).catch(() => {})
   }, [])
+
+  const dismissNudge = async () => {
+    setNudgeHidden(true)
+    try { await api.email2faDismissNudge() } catch (e) {}
+  }
+
+  const showSecurityNudge = securityStatus && !securityStatus.enabled && !securityStatus.nudgeOff && !nudgeHidden
 
   useEffect(() => {
     if (!selectedId) return
@@ -61,6 +74,51 @@ export default function Dashboard() {
           </span>
         </div>
       </div>
+
+      {/* Security 2FA nudge */}
+      {showSecurityNudge && (
+        <div style={{
+          padding: 14,
+          background: 'rgba(255, 165, 2, 0.06)',
+          border: '1px solid rgba(255, 165, 2, 0.3)',
+          borderRadius: 12,
+          marginBottom: 14,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+        }}>
+          <span style={{ fontSize: 20 }}>🔒</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>Aumenta la sicurezza del tuo accesso</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)' }}>Attiva la verifica via email. Protegge il tuo account anche se ti rubano la credenziale.</div>
+          </div>
+          <Link to="/sicurezza-accesso" className="btn-primary" style={{ fontSize: 12, padding: '7px 14px', textDecoration: 'none', whiteSpace: 'nowrap' }}>Attiva</Link>
+          <button onClick={dismissNudge} style={{ background: 'transparent', border: 'none', color: 'var(--muted-2)', cursor: 'pointer', fontSize: 18, padding: 4, lineHeight: 1 }} title="Non mostrare più">×</button>
+        </div>
+      )}
+
+      {/* Latest Briefing banner */}
+      {latestBriefing && (
+        <Link to="/briefing" style={{ display: 'block', textDecoration: 'none', color: 'inherit', marginBottom: 20 }}>
+          <div className="card" style={{
+            padding: 16,
+            background: latestBriefing.pinned ? 'rgba(180,255,57,0.04)' : 'var(--surface)',
+            border: latestBriefing.pinned ? '1px solid rgba(180,255,57,0.25)' : '1px solid var(--border)',
+            transition: 'border-color 0.15s',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 20 }}>📜</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, color: latestBriefing.pinned ? 'var(--lime)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 2 }}>
+                  Ordine del Giorno N. {String(latestBriefing.number || 1).padStart(3, '0')}
+                </div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>{latestBriefing.title}</div>
+              </div>
+              <span style={{ color: 'var(--lime)', fontSize: 14 }}>→</span>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* Program info bar */}
       <div className="card" style={{ marginBottom: 24, padding: 16 }}>

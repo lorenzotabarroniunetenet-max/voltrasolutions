@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api.js'
+import { useSonar } from '../context/SonarContext.jsx'
 
 const NETWORKS = [
   { value: 'USDT_TRC20', label: 'USDT (TRC20 - Tron)' },
@@ -16,6 +17,7 @@ const statusBadge = s => {
 }
 
 export default function Payout() {
+  const sonar = useSonar()
   const [accounts, setAccounts] = useState([])
   const [payouts, setPayouts] = useState([])
   const [form, setForm] = useState({ accountId: '', cryptoNetwork: 'USDT_TRC20', cryptoAddress: '' })
@@ -33,6 +35,7 @@ export default function Payout() {
 
   const confirm = async () => {
     setErr(''); setMsg(''); setLoading(true)
+    sonar?.show('INVIO RICHIESTA', 'RIMBORSO MISSIONE')
     try {
       await api.requestPayout({ ...form, amountUsd: 0 })
       setMsg('Rimborso missione richiesto. Ti contatteremo a breve.')
@@ -42,7 +45,7 @@ export default function Payout() {
     } catch (e) {
       setErr(e.message)
       setShowConfirm(false)
-    } finally { setLoading(false) }
+    } finally { sonar?.hide(); setLoading(false) }
   }
 
   const networkLabel = NETWORKS.find(n => n.value === form.cryptoNetwork)?.label || form.cryptoNetwork

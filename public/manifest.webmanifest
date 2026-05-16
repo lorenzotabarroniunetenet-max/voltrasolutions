@@ -1,0 +1,24 @@
+{
+  "name": "Voltra — Club Privato",
+  "short_name": "Voltra",
+  "description": "Club privato a sistema di gradi. Accesso riservato ai membri approvati.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#B4FF39",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

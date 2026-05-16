@@ -386,6 +386,7 @@ button { font-family: inherit; cursor: pointer; }
 
 .mobile-topbar { display: none; }
 .sidebar-drawer { display: none; }
+.bottom-nav { display: none; }
 
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 @keyframes slideInLeft { from { transform: translateX(-100%) } to { transform: translateX(0) } }
@@ -404,15 +405,144 @@ button { font-family: inherit; cursor: pointer; }
 .progress-bar { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; margin-top: 8px; }
 .progress-bar-fill { height: 100%; border-radius: 999px; transition: width 0.4s; background: var(--lime); }
 
+/* === ROUTE SWEEP === */
+.voltra-sweep-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100vh;
+  background: linear-gradient(180deg, transparent 0%, #B4FF39 20%, #B4FF39 80%, transparent 100%);
+  box-shadow: 0 0 14px #B4FF39, 0 0 30px rgba(180,255,57,0.6);
+  animation: voltra-sweep 650ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+.voltra-sweep-glow {
+  position: absolute;
+  top: 0;
+  left: -40vw;
+  width: 40vw;
+  height: 100vh;
+  background: linear-gradient(90deg, transparent 0%, rgba(180,255,57,0.03) 60%, rgba(180,255,57,0.10) 100%);
+  animation: voltra-sweep-glow 650ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+@keyframes voltra-sweep {
+  0% { transform: translateX(-2px); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(100vw); opacity: 0; }
+}
+@keyframes voltra-sweep-glow {
+  0% { transform: translateX(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateX(140vw); opacity: 0; }
+}
+
+/* ===== WOW EXPERIENCE ===== */
+.voltra-boot-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; transition: opacity 0.6s; }
+.voltra-boot-logo { font-size: 60px; color: var(--lime); filter: drop-shadow(0 0 20px var(--lime)); margin-bottom: 20px; animation: vboot-pulse 1.5s ease-in-out infinite; }
+@keyframes vboot-pulse { 0%, 100% { filter: drop-shadow(0 0 20px var(--lime)); opacity: 1; } 50% { filter: drop-shadow(0 0 40px var(--lime)); opacity: 0.85; } }
+.voltra-boot-brand { font-family: 'Bebas Neue'; font-size: 36px; letter-spacing: 0.15em; color: #fff; margin-bottom: 4px; }
+.voltra-boot-tagline { font-size: 10px; color: var(--muted-2); letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 40px; }
+.voltra-boot-log { width: 100%; max-width: 360px; color: var(--lime); min-height: 180px; }
+.voltra-boot-log-line { margin-bottom: 6px; display: flex; gap: 8px; animation: vboot-in 0.2s ease forwards; opacity: 0; }
+@keyframes vboot-in { to { opacity: 1; } }
+.voltra-boot-progress { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); width: 200px; height: 2px; background: rgba(180,255,57,0.1); overflow: hidden; }
+.voltra-boot-progress-fill { height: 100%; background: var(--lime); width: 0; box-shadow: 0 0 10px var(--lime); animation: vboot-progress 3.5s linear forwards; }
+@keyframes vboot-progress { to { width: 100%; } }
+.voltra-boot-footer { position: absolute; bottom: 30px; font-size: 9px; color: var(--muted-2); letter-spacing: 0.2em; text-transform: uppercase; }
+
+.voltra-daily-splash { position: fixed; inset: 0; background: rgba(0,0,0,0.97); z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; cursor: pointer; animation: vsplash-in 0.6s ease forwards; }
+@keyframes vsplash-in { from { opacity: 0 } to { opacity: 1 } }
+.voltra-splash-icon { font-size: 64px; margin-bottom: 12px; filter: drop-shadow(0 0 30px rgba(180,255,57,0.5)); animation: vsplash-float 3s ease-in-out infinite; }
+@keyframes vsplash-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+.voltra-splash-greeting { font-family: 'Bebas Neue'; font-size: 32px; color: var(--lime); letter-spacing: 0.04em; margin-bottom: 8px; }
+.voltra-splash-motto { font-style: italic; color: #FFD24A; font-size: 14px; margin-bottom: 30px; }
+.voltra-splash-stats { display: flex; gap: 24px; margin-bottom: 24px; padding: 16px 24px; border: 1px solid var(--border); border-radius: 10px; background: rgba(180,255,57,0.03); }
+.voltra-splash-stat-value { font-family: 'Bebas Neue'; font-size: 24px; color: var(--lime); line-height: 1; }
+.voltra-splash-stat-label { font-size: 9px; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.15em; margin-top: 4px; }
+.voltra-splash-quote { max-width: 280px; font-size: 13px; color: var(--muted); line-height: 1.6; font-style: italic; }
+.voltra-splash-tap { position: absolute; bottom: 40px; font-size: 10px; color: var(--muted-2); letter-spacing: 0.2em; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; animation: vblink 2s ease-in-out infinite; }
+@keyframes vblink { 0%, 100% { opacity: 0.4 } 50% { opacity: 1 } }
+
+.voltra-ticker { position: fixed; bottom: 0; left: 0; right: 0; background: #050505; border-top: 1px solid var(--lime); padding: 8px 0; overflow: hidden; z-index: 60; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--lime); box-shadow: 0 -4px 20px rgba(180,255,57,0.1); padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+.voltra-ticker-track { display: flex; gap: 40px; white-space: nowrap; animation: vticker-scroll 50s linear infinite; padding-left: 100%; }
+.voltra-ticker-item { display: inline-flex; align-items: center; gap: 8px; letter-spacing: 0.1em; text-transform: uppercase; }
+.voltra-ticker-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); flex-shrink: 0; box-shadow: 0 0 8px var(--lime); animation: vticker-pulse 1.5s ease-in-out infinite; }
+@keyframes vticker-pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
+@keyframes vticker-scroll { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+
+.voltra-achievement-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9997; display: flex; align-items: center; justify-content: center; padding: 30px; animation: vach-in 0.4s ease forwards; }
+@keyframes vach-in { from { opacity: 0 } to { opacity: 1 } }
+.voltra-achievement-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.voltra-particle { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; background: #FFD24A; border-radius: 50%; box-shadow: 0 0 8px #FFD24A; opacity: 0; }
+.voltra-achievement-box { background: linear-gradient(135deg, rgba(232,200,74,0.12), #0a0a0a); border: 2px solid #FFD24A; border-radius: 16px; padding: 36px 24px 28px; max-width: 320px; width: 100%; text-align: center; box-shadow: 0 0 60px rgba(232,200,74,0.4), inset 0 0 30px rgba(232,200,74,0.05); animation: vach-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; transform: scale(0.7); }
+@keyframes vach-pop { to { transform: scale(1) } }
+.voltra-achievement-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #FFD24A; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 700; margin-bottom: 20px; }
+.voltra-achievement-icon { font-size: 72px; margin: 8px 0 16px; filter: drop-shadow(0 0 24px #FFD24A); animation: vach-spin 4s linear infinite; display: inline-block; }
+@keyframes vach-spin { 0%, 100% { transform: rotate(-3deg) scale(1) } 50% { transform: rotate(3deg) scale(1.05) } }
+.voltra-achievement-title { font-family: 'Bebas Neue'; font-size: 26px; letter-spacing: 0.04em; margin-bottom: 8px; }
+.voltra-achievement-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+.voltra-achievement-close { background: #FFD24A; color: #000; border: none; padding: 10px 28px; border-radius: 8px; font-weight: 700; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-family: inherit; }
+
+.voltra-sonar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9996; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: vach-in 0.3s ease forwards; }
+.voltra-sonar { position: relative; width: 160px; height: 160px; margin-bottom: 30px; }
+.voltra-sonar-core { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px; background: var(--lime); border-radius: 50%; box-shadow: 0 0 20px var(--lime), 0 0 40px var(--lime); z-index: 5; }
+.voltra-sonar-ring { position: absolute; left: 50%; top: 50%; border: 1.5px solid var(--lime); border-radius: 50%; transform: translate(-50%, -50%); animation: vsonar-ping 2s ease-out infinite; }
+.voltra-sonar-ring:nth-child(2) { animation-delay: 0.5s; }
+.voltra-sonar-ring:nth-child(3) { animation-delay: 1s; }
+.voltra-sonar-ring:nth-child(4) { animation-delay: 1.5s; }
+@keyframes vsonar-ping { 0% { width: 0; height: 0; opacity: 1 } 100% { width: 160px; height: 160px; opacity: 0 } }
+.voltra-sonar-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--lime); letter-spacing: 0.3em; text-transform: uppercase; text-align: center; }
+.voltra-sonar-sub { font-size: 9px; color: var(--muted-2); margin-top: 8px; letter-spacing: 0.2em; }
+
+.voltra-konami-page { position: fixed; inset: 0; background: #000; z-index: 9995; overflow-y: auto; padding: 60px 20px 40px; background-image: radial-gradient(circle at 20% 30%, rgba(232,200,74,0.04) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(180,255,57,0.03) 0%, transparent 50%); animation: vach-in 0.8s ease forwards; }
+.voltra-konami-close { position: fixed; top: 16px; right: 16px; background: rgba(0,0,0,0.6); border: 1px solid var(--border); border-radius: 6px; width: 36px; height: 36px; color: #fff; cursor: pointer; z-index: 10; font-size: 18px; }
+.voltra-konami-content { max-width: 480px; margin: 0 auto; text-align: center; }
+.voltra-konami-seal { font-size: 80px; color: #FFD24A; filter: drop-shadow(0 0 30px #FFD24A); margin-bottom: 20px; animation: vseal-glow 3s ease-in-out infinite; }
+@keyframes vseal-glow { 0%, 100% { filter: drop-shadow(0 0 30px #FFD24A) } 50% { filter: drop-shadow(0 0 60px #FFD24A) } }
+.voltra-konami-title { font-family: 'Bebas Neue'; font-size: 32px; letter-spacing: 0.08em; color: #FFD24A; margin-bottom: 8px; }
+.voltra-konami-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted-2); letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 32px; }
+.voltra-konami-text { color: var(--muted); font-size: 13px; line-height: 1.9; font-style: italic; margin-bottom: 16px; text-align: left; padding: 0 8px; }
+.voltra-konami-divider { width: 80px; height: 1px; background: #FFD24A; margin: 32px auto; opacity: 0.4; }
+.voltra-konami-signature { color: #FFD24A; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 16px; font-family: 'JetBrains Mono', monospace; }
+
+[data-theme="light"] {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-2: #f0f0ee;
+  --border: rgba(0,0,0,0.1);
+  --border-bright: rgba(0,0,0,0.2);
+  --text: #111;
+  --muted: #555;
+  --muted-2: #888;
+}
+[data-theme="light"] body { background: var(--bg) !important; color: var(--text); }
+[data-theme="light"] .voltra-input { background: #fff; color: #111; border-color: rgba(0,0,0,0.15); }
+[data-theme="light"] .card { background: #fff; }
+[data-theme="light"] .display { color: #111; }
+[data-theme="light"] .mobile-topbar, [data-theme="light"] .bottom-nav { background: rgba(255,255,255,0.95) !important; }
+[data-theme="light"] .sidebar-desktop { background: #fff !important; }
+
+@media print {
+  .sidebar, .sidebar-desktop, .mobile-topbar, .bottom-nav, .btn-primary, .btn-secondary, .bell-dropdown { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .main { padding: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; }
+  .card { background: #fff !important; color: #000 !important; border: 1px solid #ccc !important; box-shadow: none !important; page-break-inside: avoid; }
+  h1, h2, h3, h4, .display { color: #000 !important; }
+}
+
 @media (max-width: 768px) {
   .section { padding: 60px 20px; }
   .sidebar-desktop { display: none; }
-  .main { padding: 16px; padding-top: 80px; }
+  .main { padding: 16px; padding-top: 72px; padding-bottom: 84px; }
 
   .mobile-topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
     position: fixed;
     top: 0; left: 0; right: 0;
     background: rgba(0,0,0,0.92);
@@ -423,17 +553,36 @@ button { font-family: inherit; cursor: pointer; }
     height: 60px;
   }
 
-  .sidebar-drawer {
-    display: flex !important;
+  .bottom-nav {
+    display: flex;
     position: fixed;
-    top: 0; left: 0; bottom: 0;
-    width: 280px;
-    max-width: 85vw;
-    z-index: 200;
-    animation: slideInLeft 0.25s ease;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.95);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding: 8px 4px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
   }
 
-  /* Tabella scroll orizzontale su mobile */
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 600;
+    transition: color 0.15s;
+    border-radius: 8px;
+  }
+  .bottom-nav-item:hover { color: var(--text); }
+  .bottom-nav-item.active { color: var(--lime); }
+  .bottom-nav-item svg { transition: transform 0.15s; }
+  .bottom-nav-item.active svg { transform: scale(1.05); }
+
   table { font-size: 12px; }
 }

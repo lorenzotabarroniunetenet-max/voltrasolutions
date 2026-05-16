@@ -15,19 +15,21 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const login = async (email, password) => {
-    const { token, user } = await api.login(email, password)
+  const login = async (email, password, totpToken) => {
+    const { token, user } = await api.login(email, password, totpToken)
     api.auth.setToken(token)
     setUser(user)
     return user
   }
+
+  const setUserFromLogin = (u) => setUser(u)
 
   const logout = () => {
     api.auth.clearToken()
     setUser(null)
   }
 
-  return <AuthCtx.Provider value={{ user, loading, login, logout }}>{children}</AuthCtx.Provider>
+  return <AuthCtx.Provider value={{ user, loading, login, logout, setUserFromLogin }}>{children}</AuthCtx.Provider>
 }
 
 export const useAuth = () => useContext(AuthCtx)

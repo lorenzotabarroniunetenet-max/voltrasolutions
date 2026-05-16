@@ -1,105 +1,231 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { api } from '../lib/api.js'
+import BootScreen from './BootScreen.jsx'
+import DailySplash from './DailySplash.jsx'
+import LiveTicker from './LiveTicker.jsx'
+import AchievementToast from './AchievementToast.jsx'
+
+// Icone SVG sobrie, militari
+const Icons = {
+  hq: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  briefing: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+  dossier: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="14" r="2"/><path d="M9 18h6"/></svg>,
+  albo: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L9.5 8L3 9l5 4.5L6.5 20L12 17l5.5 3L16 13.5L21 9l-6.5-1z"/></svg>,
+  docs: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>,
+  codice: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+  glossary: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="7" x2="17" y2="7"/><line x1="9" y1="11" x2="17" y2="11"/></svg>,
+  calendar: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  map: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>,
+  promo: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>,
+  payout: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>,
+  line: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+  more: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>,
+  admin: (s = 22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+}
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth()
   const nav = useNavigate()
   const loc = useLocation()
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [bellOpen, setBellOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [showBoot, setShowBoot] = useState(() => {
+    try { return !sessionStorage.getItem('voltra_boot_done') } catch { return false }
+  })
+
+  // Konami code listener → /sala-fondatori
+  useEffect(() => {
+    const seq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']
+    let idx = 0
+    const onKey = (e) => {
+      if (e.key === seq[idx]) {
+        idx++
+        if (idx === seq.length) { nav('/sala-fondatori'); idx = 0 }
+      } else { idx = 0 }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [nav])
+
+  const finishBoot = () => {
+    try { sessionStorage.setItem('voltra_boot_done', '1') } catch {}
+    setShowBoot(false)
+  }
+
+  const reloadNotifications = () => {
+    if (!user) return
+    api.notifications().then(setNotifications).catch(() => {})
+    api.notificationsUnreadCount().then(d => setUnreadCount(d.count || 0)).catch(() => {})
+  }
+
+  useEffect(() => {
+    reloadNotifications()
+    const t = setInterval(reloadNotifications, 60000)
+    return () => clearInterval(t)
+  }, [user?.id])
+
+  const openBell = () => {
+    setBellOpen(!bellOpen)
+    if (!bellOpen && unreadCount > 0) {
+      api.notificationsReadAll().then(() => {
+        setUnreadCount(0)
+        setNotifications(prev => prev.map(n => ({ ...n, readAt: n.readAt || new Date().toISOString() })))
+      }).catch(() => {})
+    }
+  }
 
   const traderLinks = [
-    { to: '/dashboard', label: 'Quartier Generale', icon: '📊' },
-    { to: '/payout', label: 'Rimborso Missione', icon: '💸' },
-    { to: '/buy', label: 'Promozione di Grado', icon: '🎖' },
-    { to: '/contact', label: 'Linea Diretta HQ', icon: '💬' },
+    { to: '/dashboard', label: 'Quartier Generale', icon: 'hq' },
+    { to: '/briefing', label: 'Sala Briefing', icon: 'briefing' },
+    { to: '/calendario', label: 'Calendario', icon: 'calendar' },
+    { to: '/fascicolo', label: 'Fascicolo', icon: 'dossier' },
+    { to: '/albo', label: 'Albo d\'Onore', icon: 'albo' },
+    { to: '/mappa', label: 'Mappa Operazioni', icon: 'map' },
+    { to: '/documenti', label: 'Documenti', icon: 'docs' },
+    { to: '/codice-condotta', label: 'Codice di Condotta', icon: 'codice' },
+    { to: '/codice-operativo', label: 'Codice Operativo', icon: 'glossary' },
+    { to: '/buy', label: 'Promozione di Grado', icon: 'promo' },
+    { to: '/payout', label: 'Rimborso Missione', icon: 'payout' },
+    { to: '/contact', label: 'Linea Diretta HQ', icon: 'line' },
   ]
-  const adminLinks = [{ to: '/admin', label: 'Stato Maggiore', icon: '⚙️' }]
+  const adminLinks = [{ to: '/admin', label: 'Stato Maggiore', icon: 'admin' }]
   const links = user?.role === 'ADMIN' ? [...traderLinks, ...adminLinks] : traderLinks
+
+  // Bottom nav mobile: 5 voci principali
+  const bottomNav = [
+    { to: '/dashboard', label: 'Quartier', icon: 'hq' },
+    { to: '/briefing', label: 'Briefing', icon: 'briefing' },
+    { to: '/buy', label: 'Promozione', icon: 'promo' },
+    { to: '/fascicolo', label: 'Fascicolo', icon: 'dossier' },
+    { to: '/personale', label: 'Altro', icon: 'more' },
+  ]
+
   const handleLogout = () => { logout(); nav('/login') }
 
-  // Chiudi drawer quando cambia route
-  useEffect(() => { setMenuOpen(false) }, [loc.pathname])
-
-  // Blocca scroll body quando drawer aperto
+  useEffect(() => { setDrawerOpen(false) }, [loc.pathname])
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    document.body.style.overflow = drawerOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
-  }, [menuOpen])
-
-  const SidebarContent = () => (
-    <>
-      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, padding: '0 12px', textDecoration: 'none', color: 'inherit' }}>
-        <span style={{ fontSize: 26, color: 'var(--lime)' }}>⚡</span>
-        <span className="display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.02em' }}>VOLTRA</span>
-      </Link>
-      <nav style={{ flex: 1 }}>
-        {links.map(l => (
-          <Link key={l.to} to={l.to} className={`sidebar-link ${loc.pathname === l.to ? 'active' : ''}`}>
-            <span>{l.icon}</span><span>{l.label}</span>
-          </Link>
-        ))}
-      </nav>
-      <div style={{ paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-        <div style={{ padding: '0 12px 12px', fontSize: 13 }}>
-          <div style={{ color: 'var(--text)', fontWeight: 500 }}>{user?.name}</div>
-          <div style={{ color: 'var(--muted)', fontSize: 11, wordBreak: 'break-all' }}>{user?.email}</div>
-        </div>
-        <button onClick={handleLogout} className="btn-secondary" style={{ width: '100%', fontSize: 13, padding: '10px' }}>Smobilitazione</button>
-      </div>
-    </>
-  )
+  }, [drawerOpen])
 
   return (
-    <div className="app-shell">
-      {/* Sidebar desktop */}
+    <>
+      {showBoot && <BootScreen onComplete={finishBoot} />}
+      {!showBoot && <DailySplash />}
+      <AchievementToast />
+      <LiveTicker />
+      <div className="app-shell" style={{ paddingBottom: 32 }}>
+      {/* SIDEBAR DESKTOP */}
       <aside className="sidebar sidebar-desktop">
-        <SidebarContent />
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, padding: '0 12px', textDecoration: 'none', color: 'inherit' }}>
+          <span style={{ fontSize: 26, color: 'var(--lime)' }}>⚡</span>
+          <span className="display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.02em' }}>VOLTRA</span>
+        </Link>
+        <nav style={{ flex: 1 }}>
+          {links.map(l => (
+            <Link key={l.to} to={l.to} className={`sidebar-link ${loc.pathname === l.to ? 'active' : ''}`}>
+              {Icons[l.icon](18)}<span>{l.label}</span>
+            </Link>
+          ))}
+        </nav>
+        <div style={{ paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+          <div style={{ padding: '0 12px 12px', fontSize: 13 }}>
+            <div style={{ color: 'var(--text)', fontWeight: 500 }}>{user?.name}</div>
+            <div style={{ color: 'var(--muted)', fontSize: 11, wordBreak: 'break-all' }}>{user?.email}</div>
+          </div>
+          <button onClick={handleLogout} className="btn-secondary" style={{ width: '100%', fontSize: 13, padding: '10px' }}>Smobilitazione</button>
+        </div>
       </aside>
 
-      {/* Mobile top bar */}
+      {/* MOBILE TOPBAR */}
       <div className="mobile-topbar">
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit' }}>
-          <span style={{ fontSize: 22, color: 'var(--lime)' }}>⚡</span>
-          <span className="display" style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.02em' }}>VOLTRA</span>
-        </Link>
-        <button
-          onClick={() => setMenuOpen(true)}
-          aria-label="Apri menu"
-          style={{ background: 'transparent', border: '1px solid var(--border-bright)', borderRadius: 8, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text)' }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: 22, color: 'var(--lime)', flexShrink: 0 }}>⚡</span>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="display" style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.04em', lineHeight: 1 }}>VOLTRA</div>
+            {user?.name && (
+              <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user?.role === 'ADMIN' ? 'Comando' : (user?.rank || 'Caporale')} · {user?.name}
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={openBell} style={{ background: 'transparent', border: '1px solid var(--border-bright)', borderRadius: 8, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)', cursor: 'pointer', position: 'relative' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            {unreadCount > 0 && <span style={{ position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderRadius: '50%', background: 'var(--lime)' }} />}
+          </button>
+          {user?.role === 'ADMIN' && (
+            <Link to="/admin" style={{ background: 'transparent', border: '1px solid var(--border-bright)', borderRadius: 8, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)', textDecoration: 'none' }}>
+              {Icons.admin(18)}
+            </Link>
+          )}
+        </div>
       </div>
 
-      {/* Mobile drawer overlay */}
-      {menuOpen && (
+      {/* BELL DROPDOWN */}
+      {bellOpen && (
         <>
-          <div
-            onClick={() => setMenuOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 199, animation: 'fadeIn 0.2s ease' }}
-          />
-          <aside className="sidebar sidebar-drawer">
-            <button
-              onClick={() => setMenuOpen(false)}
-              aria-label="Chiudi menu"
-              style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: '1px solid var(--border-bright)', borderRadius: 8, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text)' }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-            <SidebarContent />
-          </aside>
+          <div onClick={() => setBellOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 199 }} />
+          <div className="bell-dropdown" style={{
+            position: 'fixed',
+            top: 64, right: 12,
+            width: 340, maxWidth: 'calc(100vw - 24px)',
+            maxHeight: '70vh',
+            overflow: 'auto',
+            background: 'var(--surface)',
+            border: '1px solid var(--border-bright)',
+            borderRadius: 14,
+            zIndex: 200,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontSize: 13, fontWeight: 600 }}>
+              Comunicazioni di Servizio
+            </div>
+            {notifications.length === 0 ? (
+              <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>
+                Nessuna notifica.
+              </div>
+            ) : notifications.map(n => (
+              <Link key={n.id} to={n.url || '#'} onClick={() => setBellOpen(false)} style={{
+                display: 'block',
+                padding: '12px 18px',
+                borderBottom: '1px solid var(--border)',
+                textDecoration: 'none',
+                color: 'inherit',
+                background: !n.readAt ? 'rgba(180,255,57,0.03)' : 'transparent',
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 3 }}>{n.title}</div>
+                {n.body && <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>{n.body}</div>}
+                <div style={{ fontSize: 10, color: 'var(--muted-2)', marginTop: 4 }}>
+                  {new Date(n.createdAt).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}
+                </div>
+              </Link>
+            ))}
+          </div>
         </>
       )}
 
+      {/* MAIN */}
       <main className="main">{children}</main>
-    </div>
+
+      {/* BOTTOM NAV MOBILE */}
+      <nav className="bottom-nav">
+        {bottomNav.map(l => {
+          const active = loc.pathname === l.to
+          return (
+            <Link key={l.to} to={l.to} className={`bottom-nav-item ${active ? 'active' : ''}`}>
+              {Icons[l.icon](20)}
+              <span>{l.label}</span>
+            </Link>
+          )
+        })}
+      </nav>
+      </div>
+    </>
   )
 }

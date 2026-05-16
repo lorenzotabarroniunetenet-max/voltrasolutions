@@ -22,13 +22,19 @@ class ErrorBoundary extends Component {
 }
 
 export default function AdminPanel() {
-  const [tab, setTab] = useState('users')
+  const [tab, setTab] = useState('overview')
   const [userDetailId, setUserDetailId] = useState(null)
 
   const tabs = [
-    { id: 'users', label: 'Utenti' }, { id: 'accounts', label: 'Accounts' },
+    { id: 'overview', label: 'Quadro Generale' },
+    { id: 'analytics', label: 'Analytics' },
+    { id: 'users', label: 'Utenti' }, { id: 'briefings', label: 'Briefings' },
+    { id: 'documents', label: 'Documenti' },
+    { id: 'coupons', label: 'Coupon' },
+    { id: 'accounts', label: 'Accounts' },
     { id: 'snapshots', label: 'Snapshots' }, { id: 'payouts', label: 'Payouts' },
     { id: 'programs', label: 'Programmi' }, { id: 'settings', label: 'Settings' },
+    { id: 'audit', label: 'Audit' },
   ]
 
   return (
@@ -51,16 +57,426 @@ export default function AdminPanel() {
             ))}
           </div>
           <ErrorBoundary>
+            {tab === 'overview' && <OverviewTab />}
+            {tab === 'analytics' && <AnalyticsTab />}
             {tab === 'users' && <UsersTab onSelectUser={setUserDetailId} />}
+            {tab === 'briefings' && <BriefingsTab />}
+            {tab === 'documents' && <DocumentsTab />}
+            {tab === 'coupons' && <CouponsTab />}
             {tab === 'accounts' && <AccountsTab />}
             {tab === 'snapshots' && <SnapshotsTab />}
             {tab === 'payouts' && <PayoutsTab />}
             {tab === 'programs' && <ProgramsTab />}
             {tab === 'settings' && <SettingsTab />}
+            {tab === 'audit' && <AuditTab />}
           </ErrorBoundary>
         </>
       )}
     </ErrorBoundary>
+  )
+}
+
+function OverviewTab() {
+  const [data, setData] = useState(null)
+
+  useEffect(() => {
+    Promise.all([
+      api.alboOnore().catch(() => null),
+      api.adminUsers().catch(() => []),
+      api.adminPayouts().catch(() => []),
+      api.adminBriefings().catch(() => []),
+    ]).then(([albo, users, payouts, briefings]) => {
+      const pending = users.filter(u => !u.approved && u.role !== 'ADMIN').length
+      const pendingPayouts = payouts.filter(p => p.status === 'PENDING').length
+      setData({ albo, users, payouts, briefings, pending, pendingPayouts })
+    })
+  }, [])
+
+  if (!data) return <div style={{ color: 'var(--muted)' }}>Caricamento...</div>
+
+  const Stat = ({ label, value, color, sub }) => (
+    <div className="card" style={{ padding: 20 }}>
+      <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 6 }}>{label}</div>
+      <div className="display" style={{ fontSize: 36, fontWeight: 700, color: color || 'var(--lime)', lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>{sub}</div>}
+    </div>
+  )
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Stato dell'organico</h2>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+        <Stat label="Membri attivi" value={data.albo?.totalActive ?? 0} sub="In servizio" />
+        <Stat label="In attesa approvazione" value={data.pending} color={data.pending > 0 ? '#FF8C00' : 'var(--muted)'} sub={data.pending > 0 ? 'Richiede azione' : 'Nessuna'} />
+        <Stat label="Payout pendenti" value={data.pendingPayouts} color={data.pendingPayouts > 0 ? '#FF8C00' : 'var(--muted)'} />
+        <Stat label="OdG pubblicati" value={data.briefings.length} sub="Comunicazioni totali" />
+      </div>
+
+      {data.albo && (
+        <div className="card" style={{ padding: 24, marginBottom: 16 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Distribuzione per grado</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+            {['Caporale','Sergente','Capitano','Colonnello'].map(g => (
+              <div key={g} style={{ padding: 14, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{g}</div>
+                <div className="display" style={{ fontSize: 26, fontWeight: 700, color: 'var(--lime)', lineHeight: 1 }}>{data.albo.byRank?.[g] ?? 0}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="card" style={{ padding: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>Azioni rapide</h3>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: 13, color: 'var(--muted)', lineHeight: 1.8 }}>
+          <li>· Pubblica un nuovo Ordine del Giorno dalla tab <strong style={{ color: 'var(--text)' }}>Briefings</strong></li>
+          <li>· Approva nuovi membri dalla tab <strong style={{ color: 'var(--text)' }}>Utenti</strong></li>
+          <li>· Promuovi e conferisci onorificenze cliccando su un utente</li>
+          <li>· Deposita contratti dalla tab <strong style={{ color: 'var(--text)' }}>Documenti</strong></li>
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+function AnalyticsTab() {
+  const [data, setData] = useState(null)
+  useEffect(() => { api.adminAnalytics().then(setData).catch(() => {}) }, [])
+
+  const exportAlbo = async () => {
+    try {
+      const list = await api.adminExportAlbo()
+      const csv = [
+        Object.keys(list[0] || {}).join(','),
+        ...list.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
+      ].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `voltra-albo-${new Date().toISOString().slice(0,10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) { alert(e.message) }
+  }
+
+  if (!data) return <div style={{ color: 'var(--muted)' }}>Caricamento analytics...</div>
+
+  const maxGrowth = Math.max(...data.growth.map(g => g.count), 1)
+  const maxBriefing = Math.max(...data.briefingsPerMonth.map(b => b.count), 1)
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 600 }}>Analytics organico</h2>
+        <button onClick={exportAlbo} className="btn-secondary" style={{ fontSize: 12, padding: '8px 14px' }}>📥 Esporta Albo (CSV)</button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
+        <div className="card" style={{ padding: 16 }}>
+          <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Organico totale</div>
+          <div className="display" style={{ fontSize: 32, color: 'var(--lime)', lineHeight: 1 }}>{data.organico.totale}</div>
+        </div>
+        <div className="card" style={{ padding: 16 }}>
+          <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Anzianità media</div>
+          <div className="display" style={{ fontSize: 32, lineHeight: 1 }}>{data.organico.avgAnzianita}</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>giorni di servizio</div>
+        </div>
+        <div className="card" style={{ padding: 16 }}>
+          <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Onorificenze (12 mesi)</div>
+          <div className="display" style={{ fontSize: 32, color: '#E8C84A', lineHeight: 1 }}>{data.decorations.total}</div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 20, marginBottom: 16 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Crescita organico (ultimi 12 mesi)</h3>
+        {data.growth.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--muted)' }}>Nessun nuovo arruolamento.</div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 120, paddingTop: 10 }}>
+            {data.growth.map(g => (
+              <div key={g.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <div style={{ fontSize: 10, color: 'var(--lime)', fontWeight: 600 }}>{g.count}</div>
+                <div style={{ width: '80%', height: `${(g.count / maxGrowth) * 90}px`, background: 'var(--lime)', borderRadius: '4px 4px 0 0' }} />
+                <div style={{ fontSize: 9, color: 'var(--muted)' }}>{g.month.split('-')[1]}/{g.month.split('-')[0].slice(-2)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="card" style={{ padding: 20, marginBottom: 16 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Briefing per mese</h3>
+        {data.briefingsPerMonth.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--muted)' }}>Nessun briefing pubblicato.</div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 80 }}>
+            {data.briefingsPerMonth.map(b => (
+              <div key={b.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <div style={{ width: '80%', height: `${(b.count / maxBriefing) * 60}px`, background: 'var(--muted-2)', borderRadius: '3px 3px 0 0' }} />
+                <div style={{ fontSize: 9, color: 'var(--muted)' }}>{b.month.split('-')[1]}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {data.topCoupons.length > 0 && (
+        <div className="card" style={{ padding: 20 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Coupon più usati</h3>
+          {data.topCoupons.map(c => (
+            <div key={c.code} style={{ display: 'flex', justifyContent: 'space-between', padding: 8, borderBottom: '1px solid var(--border)' }}>
+              <span className="mono" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13 }}>{c.code}</span>
+              <span style={{ fontSize: 12 }}>{c.used}{c.max ? ` / ${c.max}` : ' usi'}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CouponsTab() {
+  const [list, setList] = useState([])
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ code: '', description: '', discountType: 'percent', discountValue: 10, maxUses: '', validUntil: '' })
+  const [programs, setPrograms] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState('')
+
+  const reload = () => api.adminCoupons().then(setList).catch(() => {})
+
+  useEffect(() => {
+    reload()
+    api.adminPrograms().then(setPrograms).catch(() => {})
+  }, [])
+
+  const generateCode = () => {
+    const code = 'VLT-' + Math.random().toString(36).slice(2, 8).toUpperCase()
+    setForm({ ...form, code })
+  }
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setLoading(true); setErr('')
+    try {
+      const payload = {
+        code: form.code,
+        description: form.description || undefined,
+        discountType: form.discountType,
+        discountValue: Number(form.discountValue),
+        maxUses: form.maxUses ? Number(form.maxUses) : undefined,
+        validUntil: form.validUntil || undefined,
+      }
+      await api.adminCreateCoupon(payload)
+      setForm({ code: '', description: '', discountType: 'percent', discountValue: 10, maxUses: '', validUntil: '' })
+      setShowForm(false)
+      reload()
+    } catch (e) { setErr(e.message) } finally { setLoading(false) }
+  }
+
+  const toggle = async (c) => {
+    try { await api.adminUpdateCoupon(c.id, { active: !c.active }); reload() } catch (e) { alert(e.message) }
+  }
+  const remove = async (id) => {
+    if (!confirm('Eliminare il coupon? Le redemptions registrate andranno perse.')) return
+    try { await api.adminDeleteCoupon(id); reload() } catch (e) { alert(e.message) }
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ fontSize: 13, color: 'var(--muted)' }}>{list.length} coupon · {list.filter(c => c.active).length} attivi</div>
+        <button onClick={() => setShowForm(!showForm)} className="btn-primary" style={{ fontSize: 13, padding: '8px 16px' }}>
+          {showForm ? 'Annulla' : '+ Nuovo coupon'}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="card" style={{ padding: 24, marginBottom: 20 }}>
+          <form onSubmit={submit}>
+            <div style={{ marginBottom: 12 }}>
+              <label className="label">Codice</label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input className="voltra-input" value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })} required placeholder="ES. WELCOME10" style={{ fontFamily: 'JetBrains Mono, monospace', flex: 1 }} />
+                <button type="button" onClick={generateCode} className="btn-secondary" style={{ padding: '0 14px', fontSize: 12, whiteSpace: 'nowrap' }}>Genera</button>
+              </div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label className="label">Descrizione (interno)</label>
+              <input className="voltra-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Es. Sconto benvenuto Caporale" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div>
+                <label className="label">Tipo sconto</label>
+                <select className="voltra-input" value={form.discountType} onChange={e => setForm({ ...form, discountType: e.target.value })}>
+                  <option value="percent">Percentuale (%)</option>
+                  <option value="fixed">Fisso ($)</option>
+                </select>
+              </div>
+              <div>
+                <label className="label">Valore</label>
+                <input className="voltra-input" type="number" min="1" step="0.01" value={form.discountValue} onChange={e => setForm({ ...form, discountValue: e.target.value })} required />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <div>
+                <label className="label">Max usi (vuoto = illimitato)</label>
+                <input className="voltra-input" type="number" min="1" value={form.maxUses} onChange={e => setForm({ ...form, maxUses: e.target.value })} placeholder="Illimitato" />
+              </div>
+              <div>
+                <label className="label">Scadenza (opzionale)</label>
+                <input className="voltra-input" type="date" value={form.validUntil} onChange={e => setForm({ ...form, validUntil: e.target.value })} />
+              </div>
+            </div>
+            {err && <div style={{ color: '#ff4757', fontSize: 13, marginBottom: 12 }}>{err}</div>}
+            <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Creazione...' : 'Crea coupon'}</button>
+          </form>
+        </div>
+      )}
+
+      <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+        <table style={{ width: '100%', fontSize: 13 }}>
+          <thead style={{ background: 'var(--surface-2)' }}>
+            <tr style={{ textAlign: 'left' }}><Th>Codice</Th><Th>Sconto</Th><Th>Usi</Th><Th>Scadenza</Th><Th>Stato</Th><Th></Th></tr>
+          </thead>
+          <tbody>
+            {list.map(c => (
+              <tr key={c.id} style={{ borderTop: '1px solid var(--border)' }}>
+                <Td><strong className="mono" style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--lime)' }}>{c.code}</strong>{c.description && <div style={{ fontSize: 11, color: 'var(--muted)' }}>{c.description}</div>}</Td>
+                <Td>{c.discountType === 'percent' ? `${c.discountValue}%` : `$${c.discountValue}`}</Td>
+                <Td>{c.usedCount}{c.maxUses ? ` / ${c.maxUses}` : ' / ∞'}</Td>
+                <Td>{c.validUntil ? new Date(c.validUntil).toLocaleDateString('it-IT') : '—'}</Td>
+                <Td><span className={`badge ${c.active ? 'badge-success' : 'badge-warn'}`}>{c.active ? 'Attivo' : 'Disattivato'}</span></Td>
+                <Td>
+                  <button onClick={() => toggle(c)} className="btn-secondary" style={{ padding: '4px 8px', fontSize: 10, marginRight: 4 }}>{c.active ? 'Disattiva' : 'Attiva'}</button>
+                  <button onClick={() => remove(c.id)} className="btn-secondary" style={{ padding: '4px 8px', fontSize: 10, borderColor: 'var(--red)', color: 'var(--red)' }}>×</button>
+                </Td>
+              </tr>
+            ))}
+            {list.length === 0 && <tr><td colSpan="6" style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>Nessun coupon creato.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function AuditTab() {
+  const [logs, setLogs] = useState([])
+  useEffect(() => { api.adminAuditLog().then(setLogs).catch(() => {}) }, [])
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Registro azioni</h2>
+      <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+        <table style={{ width: '100%', fontSize: 12 }}>
+          <thead style={{ background: 'var(--surface-2)' }}>
+            <tr style={{ textAlign: 'left' }}><Th>Quando</Th><Th>Attore</Th><Th>Azione</Th><Th>Dettagli</Th></tr>
+          </thead>
+          <tbody>
+            {logs.map(l => (
+              <tr key={l.id} style={{ borderTop: '1px solid var(--border)' }}>
+                <Td><span className="mono" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>{new Date(l.createdAt).toLocaleString('it-IT')}</span></Td>
+                <Td>{l.actor ? `${l.actor.name} (${l.actor.email})` : '—'}</Td>
+                <Td><code style={{ background: 'var(--surface-2)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>{l.action}</code></Td>
+                <Td><pre style={{ fontSize: 10, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', maxWidth: 400 }}>{l.metadata ? JSON.stringify(l.metadata, null, 0) : '—'}</pre></Td>
+              </tr>
+            ))}
+            {logs.length === 0 && <tr><td colSpan="4" style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>Nessuna azione registrata.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function BriefingsTab() {
+  const [list, setList] = useState([])
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ type: 'ordine_del_giorno', title: '', body: '', pinned: false })
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState('')
+
+  const reload = () => api.adminBriefings().then(setList).catch(() => {})
+  useEffect(() => { reload() }, [])
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setLoading(true); setErr('')
+    try {
+      await api.adminCreateBriefing(form)
+      setForm({ type: 'ordine_del_giorno', title: '', body: '', pinned: false })
+      setShowForm(false)
+      reload()
+    } catch (e) { setErr(e.message) } finally { setLoading(false) }
+  }
+
+  const remove = async (id) => {
+    if (!confirm('Eliminare questo briefing?')) return
+    try { await api.adminDeleteBriefing(id); reload() } catch (e) { alert(e.message) }
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 13, color: 'var(--muted)' }}>{list.length} briefing pubblicati</div>
+        <button onClick={() => setShowForm(!showForm)} className="btn-primary" style={{ fontSize: 13, padding: '8px 16px' }}>
+          {showForm ? 'Annulla' : '+ Nuovo Ordine del Giorno'}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="card" style={{ padding: 24, marginBottom: 20 }}>
+          <form onSubmit={submit}>
+            <Field label="Titolo" value={form.title} onChange={v => setForm({ ...form, title: v })} />
+            <div style={{ marginBottom: 16 }}>
+              <label className="label">Tipo</label>
+              <select className="voltra-input" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
+                <option value="ordine_del_giorno">Ordine del Giorno</option>
+                <option value="comunicazione">Comunicazione</option>
+                <option value="encomio">Encomio</option>
+                <option value="ricorrenza">Ricorrenza</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label className="label">Corpo</label>
+              <textarea className="voltra-input" value={form.body} onChange={e => setForm({ ...form, body: e.target.value })} required style={{ minHeight: 160, resize: 'vertical' }} />
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginBottom: 16, cursor: 'pointer' }}>
+              <input type="checkbox" checked={form.pinned} onChange={e => setForm({ ...form, pinned: e.target.checked })} />
+              Fissa in cima (pinned)
+            </label>
+            {err && <div style={{ color: '#ff4757', fontSize: 13, marginBottom: 12 }}>{err}</div>}
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Pubblicazione...' : 'Pubblica briefing'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+        <table style={{ width: '100%', fontSize: 13 }}>
+          <thead style={{ background: 'var(--surface-2)' }}>
+            <tr style={{ textAlign: 'left' }}><Th>N.</Th><Th>Tipo</Th><Th>Titolo</Th><Th>Data</Th><Th>Pinned</Th><Th></Th></tr>
+          </thead>
+          <tbody>
+            {list.map(b => (
+              <tr key={b.id} style={{ borderTop: '1px solid var(--border)' }}>
+                <Td><strong>#{String(b.number || 1).padStart(3, '0')}</strong></Td>
+                <Td>{b.type.replace('_', ' ')}</Td>
+                <Td>{b.title}</Td>
+                <Td>{new Date(b.publishedAt).toLocaleDateString('it-IT')}</Td>
+                <Td>{b.pinned ? '📌' : '—'}</Td>
+                <Td><button onClick={() => remove(b.id)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderColor: 'var(--red)', color: 'var(--red)' }}>Elimina</button></Td>
+              </tr>
+            ))}
+            {list.length === 0 && <tr><td colSpan="6" style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>Nessun briefing pubblicato.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
 
@@ -138,6 +554,20 @@ function UserDetail({ userId, back }) {
           <span className={`badge ${user.emailVerified ? 'badge-success' : 'badge-warn'}`}>{user.emailVerified ? 'Verificato' : 'Non verificato'}</span>
           {user.kycVerifiedAt && <span className="badge badge-info">KYC OK</span>}
         </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 20, padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>🎖 Gestione grado e onorificenze</h3>
+        </div>
+        <ManageRankAndDecorations userId={userId} currentRank={user.rank || 'Caporale'} onChange={reload} />
+      </div>
+
+      <div className="card" style={{ marginBottom: 20, padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>🔒 Sicurezza accesso</h3>
+        </div>
+        <SecurityToggle userId={userId} email2faEnabled={!!user.email2faEnabled} onChange={reload} />
       </div>
 
       <div className="card" style={{ marginBottom: 20, padding: 24 }}>
@@ -885,6 +1315,241 @@ function ProgramsTab() {
           <Field label="Activation Fee" type="number" value={form.activationFeeUsd} onChange={v => setForm({ ...form, activationFeeUsd: v })} />
           <button onClick={submit} className="btn-primary" style={{ width: '100%', marginTop: 8 }}>{edit ? 'Salva' : 'Crea'}</button>
         </Modal>
+      )}
+    </div>
+  )
+}
+
+function DocumentsTab() {
+  const [users, setUsers] = useState([])
+  const [selectedUser, setSelectedUser] = useState('')
+  const [docs, setDocs] = useState([])
+  const [form, setForm] = useState({ category: 'contract', title: '', description: '', fileUrl: '' })
+  const [showForm, setShowForm] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    api.adminUsers().then(setUsers).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (selectedUser) api.adminUserDocuments(selectedUser).then(setDocs).catch(() => {})
+    else setDocs([])
+  }, [selectedUser])
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      await api.adminUploadDocument(selectedUser, form)
+      setForm({ category: 'contract', title: '', description: '', fileUrl: '' })
+      setShowForm(false)
+      api.adminUserDocuments(selectedUser).then(setDocs).catch(() => {})
+    } catch (e) { alert(e.message) } finally { setLoading(false) }
+  }
+
+  const remove = async (id) => {
+    if (!confirm('Eliminare questo documento?')) return
+    try {
+      await api.adminDeleteDocument(id)
+      api.adminUserDocuments(selectedUser).then(setDocs).catch(() => {})
+    } catch (e) { alert(e.message) }
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 16 }}>
+        <label className="label">Membro</label>
+        <select className="voltra-input" value={selectedUser} onChange={e => setSelectedUser(e.target.value)} style={{ maxWidth: 400 }}>
+          <option value="">— Seleziona membro —</option>
+          {users.filter(u => u.approved).map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
+        </select>
+      </div>
+
+      {selectedUser && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ fontSize: 13, color: 'var(--muted)' }}>{docs.length} documenti</div>
+            <button onClick={() => setShowForm(!showForm)} className="btn-primary" style={{ fontSize: 13, padding: '8px 16px' }}>
+              {showForm ? 'Annulla' : '+ Deposita documento'}
+            </button>
+          </div>
+
+          {showForm && (
+            <div className="card" style={{ padding: 24, marginBottom: 20 }}>
+              <form onSubmit={submit}>
+                <div style={{ marginBottom: 12 }}>
+                  <label className="label">Categoria</label>
+                  <select className="voltra-input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                    <option value="contract">Contratto</option>
+                    <option value="certificate">Attestato</option>
+                    <option value="receipt">Ricevuta</option>
+                    <option value="other">Altro</option>
+                  </select>
+                </div>
+                <Field label="Titolo" value={form.title} onChange={v => setForm({ ...form, title: v })} />
+                <div style={{ marginBottom: 12 }}>
+                  <label className="label">Descrizione (opzionale)</label>
+                  <textarea className="voltra-input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} />
+                </div>
+                <Field label="URL file (opzionale, es. link Drive/Dropbox)" value={form.fileUrl} onChange={v => setForm({ ...form, fileUrl: v })} />
+                <button type="submit" className="btn-primary" disabled={loading || !form.title}>
+                  {loading ? 'In corso...' : 'Deposita'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          <div className="card" style={{ padding: 0, overflow: 'auto' }}>
+            <table style={{ width: '100%', fontSize: 13 }}>
+              <thead style={{ background: 'var(--surface-2)' }}>
+                <tr style={{ textAlign: 'left' }}><Th>Categoria</Th><Th>Titolo</Th><Th>Data</Th><Th>Firmato</Th><Th></Th></tr>
+              </thead>
+              <tbody>
+                {docs.map(d => (
+                  <tr key={d.id} style={{ borderTop: '1px solid var(--border)' }}>
+                    <Td>{d.category}</Td>
+                    <Td>{d.title}</Td>
+                    <Td>{new Date(d.uploadedAt).toLocaleDateString('it-IT')}</Td>
+                    <Td>{d.signed ? `✓ ${new Date(d.signedAt).toLocaleDateString('it-IT')}` : '—'}</Td>
+                    <Td><button onClick={() => remove(d.id)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderColor: 'var(--red)', color: 'var(--red)' }}>Elimina</button></Td>
+                  </tr>
+                ))}
+                {docs.length === 0 && <tr><td colSpan="5" style={{ padding: 24, textAlign: 'center', color: 'var(--muted)' }}>Nessun documento.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function SecurityToggle({ userId, email2faEnabled, onChange }) {
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  const toggle = async () => {
+    const want = !email2faEnabled
+    if (!confirm(want ? 'Attivare la verifica via email per questo utente? Riceverà notifica e dovrà usare il codice ad ogni accesso.' : 'Disattivare la verifica via email?')) return
+    setBusy(true)
+    try {
+      await api.adminToggleUserEmail2fa(userId, want)
+      setMsg(want ? 'Verifica via email attivata. Utente notificato.' : 'Verifica via email disattivata.')
+      onChange()
+      setTimeout(() => setMsg(''), 4000)
+    } catch (e) { alert(e.message) } finally { setBusy(false) }
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 500 }}>Verifica via email (2FA)</div>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+            {email2faEnabled ? 'Attiva — l\'utente riceve un codice via email ad ogni accesso' : 'Non attiva'}
+          </div>
+        </div>
+        <button onClick={toggle} disabled={busy} className={email2faEnabled ? 'btn-secondary' : 'btn-primary'} style={{ fontSize: 12, padding: '8px 14px' }}>
+          {busy ? '...' : email2faEnabled ? 'Disattiva' : 'Attiva per questo utente'}
+        </button>
+      </div>
+      {msg && <div style={{ marginTop: 8, padding: 10, background: 'rgba(180,255,57,0.06)', border: '1px solid rgba(180,255,57,0.25)', borderRadius: 8, color: 'var(--lime)', fontSize: 12 }}>{msg}</div>}
+    </div>
+  )
+}
+
+function ManageRankAndDecorations({ userId, currentRank, onChange }) {
+  const [decorations, setDecorations] = useState([])
+  const [showPromote, setShowPromote] = useState(false)
+  const [showAward, setShowAward] = useState(false)
+  const [promoteData, setPromoteData] = useState({ rank: '', reason: '' })
+  const [awardData, setAwardData] = useState({ decorationId: '', reason: '' })
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => { api.adminDecorations().then(setDecorations).catch(() => {}) }, [])
+
+  const promote = async () => {
+    if (!promoteData.rank) { alert('Seleziona il grado'); return }
+    setBusy(true)
+    try {
+      await api.adminPromoteUser(userId, promoteData)
+      setMsg(`Promozione a ${promoteData.rank} disposta. Notifica inviata al membro.`)
+      setPromoteData({ rank: '', reason: '' })
+      setShowPromote(false)
+      onChange()
+      setTimeout(() => setMsg(''), 4000)
+    } catch (e) { alert(e.message) } finally { setBusy(false) }
+  }
+
+  const award = async () => {
+    if (!awardData.decorationId) { alert('Seleziona l\'onorificenza'); return }
+    setBusy(true)
+    try {
+      await api.adminAwardDecoration({ userId, ...awardData })
+      setMsg('Onorificenza conferita. Notifica inviata al membro.')
+      setAwardData({ decorationId: '', reason: '' })
+      setShowAward(false)
+      onChange()
+      setTimeout(() => setMsg(''), 4000)
+    } catch (e) { alert(e.message) } finally { setBusy(false) }
+  }
+
+  const RANKS = ['Caporale', 'Sergente', 'Capitano', 'Colonnello']
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+        <div style={{ fontSize: 13 }}>
+          <span style={{ color: 'var(--muted)' }}>Grado attuale: </span>
+          <strong style={{ color: 'var(--lime)' }}>{currentRank}</strong>
+        </div>
+      </div>
+
+      {msg && (
+        <div style={{ padding: 12, background: 'rgba(180,255,57,0.06)', border: '1px solid rgba(180,255,57,0.25)', borderRadius: 8, color: 'var(--lime)', fontSize: 13, marginBottom: 12 }}>
+          {msg}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        <button onClick={() => { setShowPromote(!showPromote); setShowAward(false) }} className="btn-primary" style={{ fontSize: 12, padding: '8px 14px' }}>
+          {showPromote ? 'Annulla promozione' : '🎖 Promuovi'}
+        </button>
+        <button onClick={() => { setShowAward(!showAward); setShowPromote(false) }} className="btn-secondary" style={{ fontSize: 12, padding: '8px 14px' }}>
+          {showAward ? 'Annulla conferimento' : '⚜ Conferisci onorificenza'}
+        </button>
+      </div>
+
+      {showPromote && (
+        <div style={{ padding: 16, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+          <label className="label">Nuovo grado</label>
+          <select className="voltra-input" value={promoteData.rank} onChange={e => setPromoteData({ ...promoteData, rank: e.target.value })}>
+            <option value="">— Seleziona —</option>
+            {RANKS.filter(r => r !== currentRank).map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <label className="label" style={{ marginTop: 12 }}>Motivazione (opzionale)</label>
+          <textarea className="voltra-input" value={promoteData.reason} onChange={e => setPromoteData({ ...promoteData, reason: e.target.value })} rows={2} style={{ marginBottom: 12 }} />
+          <button onClick={promote} disabled={busy} className="btn-primary" style={{ fontSize: 13, padding: '8px 16px' }}>
+            {busy ? 'In corso...' : 'Disponi promozione'}
+          </button>
+        </div>
+      )}
+
+      {showAward && (
+        <div style={{ padding: 16, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+          <label className="label">Onorificenza</label>
+          <select className="voltra-input" value={awardData.decorationId} onChange={e => setAwardData({ ...awardData, decorationId: e.target.value })}>
+            <option value="">— Seleziona —</option>
+            {decorations.map(d => <option key={d.id} value={d.id}>{d.iconKey} {d.name}</option>)}
+          </select>
+          <label className="label" style={{ marginTop: 12 }}>Motivazione (opzionale)</label>
+          <textarea className="voltra-input" value={awardData.reason} onChange={e => setAwardData({ ...awardData, reason: e.target.value })} rows={2} style={{ marginBottom: 12 }} />
+          <button onClick={award} disabled={busy} className="btn-primary" style={{ fontSize: 13, padding: '8px 16px' }}>
+            {busy ? 'In corso...' : 'Conferisci'}
+          </button>
+        </div>
       )}
     </div>
   )

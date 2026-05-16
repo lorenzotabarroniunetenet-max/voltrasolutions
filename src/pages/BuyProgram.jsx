@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api.js'
+import { useSonar } from '../context/SonarContext.jsx'
 
 function TelegramIcon({ size = 20, color = 'currentColor' }) {
   return (
@@ -39,6 +40,7 @@ const GRADE_LORE = {
 const VALID_GRADES = Object.keys(GRADE_LORE)
 
 export default function BuyProgram() {
+  const sonar = useSonar()
   const [programs, setPrograms] = useState([])
   const [wallets, setWallets] = useState([])
   const [telegramUrl, setTelegramUrl] = useState('')
@@ -46,6 +48,10 @@ export default function BuyProgram() {
   const [selected, setSelected] = useState(null)
   const [selectedNetwork, setSelectedNetwork] = useState(null)
   const [txHash, setTxHash] = useState('')
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [couponErr, setCouponErr] = useState('')
+  const [couponBusy, setCouponBusy] = useState(false)
   const [step, setStep] = useState('select')
   const [copied, setCopied] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -72,17 +78,37 @@ export default function BuyProgram() {
     setTimeout(() => setCopied(null), 1500)
   }
 
+  const applyCoupon = async () => {
+    if (!couponCode.trim() || !selected) return
+    setCouponBusy(true); setCouponErr('')
+    try {
+      const r = await api.validateCoupon(couponCode.trim().toUpperCase(), selected.id)
+      setAppliedCoupon(r)
+    } catch (e) {
+      setCouponErr(e.message)
+      setAppliedCoupon(null)
+    } finally { setCouponBusy(false) }
+  }
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode('')
+    setCouponErr('')
+  }
+
   const confirmPayment = async () => {
     if (!txHash.trim()) { setErr('Inserisci la TxHash della transazione'); return }
     setErr(''); setSubmitting(true)
+    sonar?.show('TRASMISSIONE IN CORSO', 'VERIFICA QUARTIER GENERALE')
     try {
       await api.requestPurchase({
         programId: selected.id,
         network: selectedNetwork,
         txHash: txHash.trim(),
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
       })
       setStep('done')
-    } catch (e) { setErr(e.message) } finally { setSubmitting(false) }
+    } catch (e) { setErr(e.message) } finally { sonar?.hide(); setSubmitting(false) }
   }
 
   if (step === 'done') {
@@ -117,7 +143,14 @@ export default function BuyProgram() {
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Quota</div>
-              <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>${Number(selected.priceUsd)}</div>
+              {appliedCoupon ? (
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'line-through', marginBottom: 2 }}>${Number(selected.priceUsd)}</div>
+                  <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>${appliedCoupon.finalPrice.toFixed(2)}</div>
+                </div>
+              ) : (
+                <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>${Number(selected.priceUsd)}</div>
+              )}
             </div>
           </div>
 
@@ -217,6 +250,42 @@ export default function BuyProgram() {
                       </a>
                     </div>
                   )}
+
+                  {/* Coupon */}
+                  <div style={{ marginBottom: 20, padding: 14, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                    <div className="label" style={{ marginBottom: 8 }}>Codice coupon (opzionale)</div>
+                    {appliedCoupon ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, background: 'rgba(180,255,57,0.06)', border: '1px solid rgba(180,255,57,0.3)', borderRadius: 8 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--lime)' }}>✓ {appliedCoupon.code}</div>
+                          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                            {appliedCoupon.discountType === 'percent' ? `-${appliedCoupon.discountValue}%` : `-$${appliedCoupon.discountValue}`}
+                            {' '}— Prezzo finale: <strong style={{ color: 'var(--lime)' }}>${appliedCoupon.finalPrice.toFixed(2)}</strong>
+                          </div>
+                        </div>
+                        <button onClick={removeCoupon} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 18 }}>×</button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          className="voltra-input"
+                          value={couponCode}
+                          onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                          placeholder="Inserisci codice..."
+                          style={{ flex: 1, fontFamily: 'JetBrains Mono, monospace' }}
+                        />
+                        <button
+                          onClick={applyCoupon}
+                          disabled={couponBusy || !couponCode.trim()}
+                          className="btn-secondary"
+                          style={{ fontSize: 12, padding: '0 16px', whiteSpace: 'nowrap' }}
+                        >
+                          {couponBusy ? '...' : 'Applica'}
+                        </button>
+                      </div>
+                    )}
+                    {couponErr && <div style={{ color: '#ff4757', fontSize: 12, marginTop: 8 }}>{couponErr}</div>}
+                  </div>
 
                   {/* TxHash + Confirm */}
                   <div style={{ marginBottom: 16 }}>
