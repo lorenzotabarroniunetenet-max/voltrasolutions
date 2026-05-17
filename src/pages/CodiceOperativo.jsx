@@ -4,41 +4,33 @@ import { GLOSSARY } from '../lib/glossary.js'
 const GUIDES = [
   {
     id: 'primo-pagamento',
-    title: 'Effettuare il primo pagamento',
-    desc: 'Procedura completa dall\'apertura della Promozione di Grado al conferimento dell\'attivazione.',
-    icon: '💰',
+    title: 'Procedura di accesso al grado',
+    desc: 'Dalla selezione del grado all\'attivazione da parte del Comando.',
+    icon: '🎖',
     steps: [
       {
         title: 'Apri Promozione di Grado',
-        body: 'Dal menu laterale seleziona "Promozione di Grado". Visualizzerai i 4 gradi disponibili con le rispettive missioni e quote di accesso.',
+        body: 'Dal menu laterale seleziona "Promozione di Grado". Visualizzerai i gradi disponibili con le rispettive missioni e quote di accesso.',
       },
       {
         title: 'Seleziona il grado',
-        body: 'Premi "Richiedi Grado →" sul grado desiderato. Al momento sono attivi Caporale ($80) e Sergente ($160). Capitano e Colonnello sono in preparazione.',
+        body: 'Premi "Richiedi Grado →" sul grado desiderato. Al momento sono attivi Caporale e Sergente. Capitano e Colonnello sono in preparazione.',
       },
       {
-        title: 'Scegli il network crypto',
-        body: 'Seleziona la rete che preferisci usare: USDT TRC20 (più economica), USDT ERC20, USDC, BTC o ETH. Solo le reti configurate dal Comando appaiono in elenco.',
+        title: 'Consulta le modalità operative',
+        body: 'Nella schermata successiva il sistema mostra gli estremi necessari per il versamento, riservati ai membri approvati.',
       },
       {
-        title: 'Copia indirizzo e importo',
-        body: 'Usa il pulsante "Copia" accanto a importo e indirizzo wallet. Il QR code è scansionabile direttamente dalle app mobile (Trust Wallet, MetaMask, ecc.).',
+        title: 'Effettua il versamento',
+        body: 'Procedi secondo le indicazioni fornite. Verifica due volte l\'importo e gli estremi prima di confermare.',
       },
       {
-        title: 'Effettua la transazione',
-        body: 'Dal tuo wallet, invia l\'importo esatto all\'indirizzo copiato. Verifica due volte la rete: invii a network errati sono irrecuperabili.',
+        title: 'Conferma al Comando',
+        body: 'Una volta completato, comunica la conferma del versamento al Comando tramite il canale Telegram dedicato. Il Comando verifica entro 24 ore.',
       },
       {
-        title: 'Recupera la TxHash',
-        body: 'Una volta confermata la transazione, copia l\'hash dal wallet. È un codice univoco che inizia con "0x..." su ETH/ERC20, oppure caratteri alfanumerici su altre reti.',
-      },
-      {
-        title: 'Conferma il pagamento',
-        body: 'Incolla la TxHash nell\'apposito campo e premi "Conferma pagamento". Il Comando riceve notifica immediata e verifica entro 24 ore.',
-      },
-      {
-        title: 'Invia anche su Telegram',
-        body: 'Per accelerare la verifica, condividi la TxHash anche sul canale Telegram pagamenti indicato. Il Comando attiverà il grado e riceverai una notifica.',
+        title: 'Attivazione del grado',
+        body: 'Al completamento della verifica, il grado viene attivato sul tuo profilo. Riceverai notifica e potrai accedere alla Cerimonia di Promozione.',
       },
     ],
   },
@@ -50,7 +42,7 @@ const GUIDES = [
     steps: [
       {
         title: 'Comprendi il sistema',
-        body: 'Ogni operazione conclusa (acquisto grado confermato) incrementa il tuo contatore. Al raggiungimento di una soglia, il requisito diventa "soddisfatto".',
+        body: 'Ogni operazione conclusa incrementa il tuo contatore. Al raggiungimento di una soglia, il requisito diventa "soddisfatto".',
       },
       {
         title: 'Consulta i Requisiti',
@@ -121,7 +113,7 @@ const GUIDES = [
         body: 'L\'appartenenza a Voltra è privata. Non condividere screenshot del Quartier Generale, della tua matricola o del Fascicolo all\'esterno del club.',
       },
       {
-        title: 'Cancellazione account',
+        title: 'Smobilitazione',
         body: 'Da Personale → Smobilitazione, oppure scrivendo al Comando tramite ticket supporto. La cancellazione è definitiva e rimuove ogni traccia.',
       },
     ],

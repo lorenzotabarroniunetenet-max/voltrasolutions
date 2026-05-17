@@ -13,31 +13,31 @@ function TelegramIcon({ size = 20, color = 'currentColor' }) {
 const FAQ = [
   {
     q: 'Come funziona la Promozione di Grado?',
-    a: 'Si seleziona il grado desiderato (Caporale o Sergente al momento), si effettua il pagamento crypto all\'indirizzo wallet del Comando, si carica la ricevuta sul canale Telegram dedicato. Il Comando verifica e attiva il grado entro 24 ore.'
+    a: 'Ogni grado prevede una quota di accesso. Selezionato il grado, ricevi le istruzioni di pagamento riservate. Effettuato il versamento, segnali la conferma al Comando tramite il canale dedicato. L\'attivazione avviene entro 24 ore dalla verifica.'
   },
   {
-    q: 'Cos\'è la TxHash e dove la trovo?',
-    a: 'È l\'hash univoco della transazione blockchain. Lo trovi nel tuo wallet (es. MetaMask, Trust Wallet) cliccando sulla transazione appena effettuata. Inizia con "0x..." per ETH/USDT-ERC20, oppure con caratteri alfanumerici per TRC20/Solana.'
+    q: 'Come ricevo le istruzioni di pagamento?',
+    a: 'Le modalità operative sono riservate ai membri approvati. Dopo aver selezionato il grado dal Quartier Generale, vengono mostrati gli estremi necessari. Per dubbi, contattare il Comando tramite la Linea Diretta.'
   },
   {
-    q: 'Cosa succede se sbaglio TxHash?',
-    a: 'Niente di grave. Il Comando verifica manualmente le transazioni in entrata sul wallet. Se la TxHash è errata, basta inviare quella corretta sul canale Telegram pagamenti.'
-  },
-  {
-    q: 'Posso usare una crypto diversa da USDT?',
-    a: 'Sì. Sono accettati USDT (TRC20 / ERC20), USDC (ERC20 / Solana), BTC ed ETH. L\'importo è sempre fissato in USD: il valore equivalente nella crypto scelta viene calcolato al momento dell\'invio.'
+    q: 'Quanto tempo serve per l\'attivazione del grado?',
+    a: 'Il Comando verifica e attiva il grado entro 24 ore dalla conferma del pagamento. In caso di ritardo, contattare il canale Telegram supporto per accelerare la pratica.'
   },
   {
     q: 'Le operazioni concluse fanno scattare automaticamente le onorificenze?',
-    a: 'No. Il raggiungimento di una soglia rende il requisito "soddisfatto" ma il conferimento dell\'onorificenza resta a discrezione del Comando, valutato sul merito complessivo.'
+    a: 'No. Il raggiungimento di una soglia rende il requisito "soddisfatto" ma il conferimento dell\'onorificenza resta a discrezione del Comando, valutato sul merito complessivo del membro.'
   },
   {
-    q: 'Posso essere promosso di grado senza pagare?',
-    a: 'Le promozioni di grado sono decise unilateralmente dal Comando in base a valutazioni interne. Il pagamento riguarda l\'accesso iniziale a un grado disponibile, non avanzamenti successivi.'
+    q: 'Posso essere promosso di grado senza versamento?',
+    a: 'Le promozioni di grado sono decise unilateralmente dal Comando in base a valutazioni interne. Il versamento riguarda esclusivamente l\'accesso iniziale a un grado disponibile, non gli avanzamenti successivi.'
+  },
+  {
+    q: 'Cos\'è il Fascicolo Personale?',
+    a: 'È il documento ufficiale che riepiloga la tua identità nel club: matricola, grado, anzianità di servizio, onorificenze ricevute e Ruolino delle attività. Lo trovi nel menu principale.'
   },
   {
     q: 'Come elimino il mio account?',
-    a: 'Dalla sezione Personale → Sicurezza, oppure scrivendo al Comando tramite ticket di supporto. La cancellazione è definitiva e rimuove profilo, onorificenze, fascicolo e log di servizio.'
+    a: 'Dalla sezione Personale → Smobilitazione, oppure scrivendo al Comando tramite ticket di supporto. La cancellazione è definitiva e rimuove profilo, onorificenze, fascicolo e log di servizio.'
   },
   {
     q: 'Quanto tempo serve per ricevere risposta a un ticket?',

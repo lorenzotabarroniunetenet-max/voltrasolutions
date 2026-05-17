@@ -682,11 +682,14 @@ button { font-family: inherit; cursor: pointer; }
   to { transform: rotate(360deg); }
 }
 
-/* Crosshair cursor area — nasconde il cursore di default solo nell'area membri (non landing/login) */
-.app-shell { cursor: none; }
-.app-shell a, .app-shell button, .app-shell input, .app-shell textarea, .app-shell select, .app-shell [role="button"] { cursor: none; }
+/* Crosshair cursor area — nasconde il cursore di default nell'area membri */
+.app-shell, .app-shell * { cursor: none !important; }
 @media (pointer: coarse) {
-  .app-shell { cursor: auto; }
-  .app-shell a, .app-shell button, .app-shell input, .app-shell textarea, .app-shell select { cursor: pointer; }
-  .app-shell input[type="text"], .app-shell input[type="email"], .app-shell input[type="password"], .app-shell textarea { cursor: text; }
+  .app-shell, .app-shell * { cursor: auto !important; }
+  .app-shell a, .app-shell button, .app-shell select, .app-shell [role="button"] { cursor: pointer !important; }
+  .app-shell input[type="text"], .app-shell input[type="email"], .app-shell input[type="password"], .app-shell input[type="number"], .app-shell textarea { cursor: text !important; }
 }
+
+/* Gamification animations */
+@keyframes voltraHoleIn { from { transform: scale(0); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }

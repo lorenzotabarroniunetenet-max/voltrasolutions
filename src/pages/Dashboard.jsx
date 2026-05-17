@@ -5,6 +5,8 @@ import KpiCard from '../components/KpiCard.jsx'
 import RuleBadge from '../components/RuleBadge.jsx'
 import GrowthChart from '../components/GrowthChart.jsx'
 import DailyCalendar from '../components/DailyCalendar.jsx'
+import DailyStreak from '../components/DailyStreak.jsx'
+import TiroDelComando from '../components/TiroDelComando.jsx'
 
 export default function Dashboard() {
   const [accounts, setAccounts] = useState([])
@@ -130,6 +132,12 @@ export default function Dashboard() {
           <div><span style={{ color: 'var(--muted)' }}>Login: </span><strong>{account.brokerLogin}</strong></div>
           <div><span style={{ color: 'var(--muted)' }}>Rimborso ogni: </span><strong>{program.payoutFrequencyDays || 7} giorni</strong></div>
         </div>
+      </div>
+
+      {/* Streak + Tiro del Comando */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
+        <DailyStreak />
+        <TiroDelComando />
       </div>
 
       {/* Payout eligibility banner */}

@@ -8,6 +8,7 @@ import LiveTicker from './LiveTicker.jsx'
 import AchievementToast from './AchievementToast.jsx'
 import Crosshair from './Crosshair.jsx'
 import Gunshot from './Gunshot.jsx'
+import EasterConsole from './EasterConsole.jsx'
 
 // Icone SVG sobrie, militari
 const Icons = {
@@ -39,6 +40,21 @@ export default function Layout({ children }) {
   const [showBoot, setShowBoot] = useState(() => {
     try { return !sessionStorage.getItem('voltra_boot_done') } catch { return false }
   })
+  const [easterOpen, setEasterOpen] = useState(false)
+  const [boltClicks, setBoltClicks] = useState([])
+
+  const onBoltClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const now = Date.now()
+    const filtered = boltClicks.filter(t => now - t < 800)
+    filtered.push(now)
+    setBoltClicks(filtered)
+    if (filtered.length >= 3) {
+      setBoltClicks([])
+      setEasterOpen(true)
+    }
+  }
 
   // Konami code listener → /sala-fondatori
   useEffect(() => {
@@ -124,11 +140,12 @@ export default function Layout({ children }) {
       <LiveTicker />
       <Crosshair />
       <Gunshot />
+      <EasterConsole open={easterOpen} onClose={() => setEasterOpen(false)} />
       <div className="app-shell" style={{ paddingBottom: 32 }}>
       {/* SIDEBAR DESKTOP */}
       <aside className="sidebar sidebar-desktop">
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, padding: '0 12px', textDecoration: 'none', color: 'inherit' }}>
-          <span className={unreadCount > 0 ? 'voltra-bolt-pulse' : ''} style={{ fontSize: 26, color: 'var(--lime)' }}>⚡</span>
+          <span onClick={onBoltClick} title="Comunicazione cifrata" className={unreadCount > 0 ? 'voltra-bolt-pulse' : ''} style={{ fontSize: 26, color: 'var(--lime)', cursor: 'pointer', userSelect: 'none' }}>⚡</span>
           <span className="display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.02em' }}>VOLTRA</span>
         </Link>
         <nav style={{ flex: 1 }}>
@@ -150,7 +167,7 @@ export default function Layout({ children }) {
       {/* MOBILE TOPBAR */}
       <div className="mobile-topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-          <span className={unreadCount > 0 ? 'voltra-bolt-pulse' : ''} style={{ fontSize: 22, color: 'var(--lime)', flexShrink: 0 }}>⚡</span>
+          <span onClick={onBoltClick} className={unreadCount > 0 ? 'voltra-bolt-pulse' : ''} style={{ fontSize: 22, color: 'var(--lime)', flexShrink: 0, cursor: 'pointer', userSelect: 'none' }}>⚡</span>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div className="display" style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.04em', lineHeight: 1 }}>VOLTRA</div>
             {user?.name && (

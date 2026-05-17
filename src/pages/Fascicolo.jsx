@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api.js'
+import Distintivi from '../components/Distintivi.jsx'
 
 const LOG_ICONS = {
   enlistment: '🚩',
@@ -154,6 +155,8 @@ export default function Fascicolo() {
           </div>
         )}
       </div>
+
+      <Distintivi />
     </div>
   )
 }
