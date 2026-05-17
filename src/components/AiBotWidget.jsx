@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'
 const STORAGE_KEY = 'voltra_ai_history'
 const TOGGLE_KEY = 'voltra_ai_enabled'
 
@@ -38,7 +39,7 @@ export default function AiBotWidget() {
     window.addEventListener('voltra-ai-toggle', onToggle)
 
     // Check server availability
-    fetch('/api/ai/status').then(r => r.json()).then(d => setServerEnabled(d.enabled)).catch(() => setServerEnabled(false))
+    fetch(`${API_BASE}/api/ai/status`).then(r => r.json()).then(d => setServerEnabled(d.enabled)).catch(() => setServerEnabled(false))
 
     // Load history
     try {
@@ -89,7 +90,7 @@ export default function AiBotWidget() {
 
     try {
       const token = localStorage.getItem('voltra_token')
-      const res = await fetch('/api/ai/ask', {
+      const res = await fetch(`${API_BASE}/api/ai/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
