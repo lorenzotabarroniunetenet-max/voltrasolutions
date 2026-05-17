@@ -111,6 +111,7 @@ export default function Layout({ children }) {
     { to: '/buy', label: 'Promozione di Grado', icon: 'promo' },
     { to: '/payout', label: 'Rimborso Missione', icon: 'payout' },
     { to: '/contact', label: 'Linea Diretta HQ', icon: 'line' },
+    { to: '/personale', label: 'Personale', icon: 'more' },
   ]
   const adminLinks = [{ to: '/admin', label: 'Stato Maggiore', icon: 'admin' }]
   const links = user?.role === 'ADMIN' ? [...traderLinks, ...adminLinks] : traderLinks
