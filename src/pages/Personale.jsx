@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext.jsx'
 import { api } from '../lib/api.js'
 import { GRADE_LORE } from '../lib/lore.js'
 import { isGunshotEnabled, setGunshotEnabled } from '../components/Gunshot.jsx'
+import Stemma from '../components/Stemma.jsx'
 
 export default function Personale() {
   const { user, logout } = useAuth()
@@ -91,8 +92,8 @@ export default function Personale() {
       {/* Card identità */}
       <div className="card" style={{ padding: 20, marginBottom: 20, background: `linear-gradient(135deg, ${accentColor}10 0%, var(--surface) 100%)`, border: `1px solid ${accentColor}33` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: `${accentColor}15`, border: `1px solid ${accentColor}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 700, color: accentColor, flexShrink: 0 }}>
-            {(user?.name || '?').charAt(0).toUpperCase()}
+          <div style={{ width: 64, flexShrink: 0 }}>
+            <Stemma matricola={dossier?.matricola || 'VLT-0000'} rank={user?.role === 'ADMIN' ? 'Colonnello' : rank} size={64} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 11, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 2 }}>

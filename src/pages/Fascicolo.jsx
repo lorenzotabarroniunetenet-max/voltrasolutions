@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api.js'
 import Distintivi from '../components/Distintivi.jsx'
+import Stemma from '../components/Stemma.jsx'
 
 const LOG_ICONS = {
   enlistment: '🚩',
@@ -44,15 +45,8 @@ export default function Fascicolo() {
         border: `1px solid ${accentColor}33`,
       }}>
         <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{
-            width: 76, height: 76, borderRadius: '50%',
-            background: `${accentColor}15`,
-            border: `1px solid ${accentColor}50`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 30, fontWeight: 700, color: accentColor,
-            flexShrink: 0,
-          }}>
-            {(name || '?').charAt(0).toUpperCase()}
+          <div style={{ width: 84, flexShrink: 0 }}>
+            <Stemma matricola={matricola || 'VLT-0000'} rank={rank} size={84} />
           </div>
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ fontSize: 11, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, marginBottom: 4 }}>
