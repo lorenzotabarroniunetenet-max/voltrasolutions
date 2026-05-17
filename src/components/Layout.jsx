@@ -235,7 +235,41 @@ export default function Layout({ children }) {
       )}
 
       {/* MAIN */}
-      <main className="main">{children}</main>
+      <main className="main">
+        {(() => {
+          // Pagine "root" che non mostrano back: bottom nav + dashboard
+          const rootPages = ['/dashboard', '/briefing', '/buy', '/fascicolo', '/personale', '/']
+          const showBack = !rootPages.includes(loc.pathname) && loc.pathname !== ''
+          if (!showBack) return null
+          return (
+            <button
+              onClick={() => nav(-1)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'transparent',
+                border: '1px solid var(--border-bright)',
+                color: 'var(--muted)',
+                padding: '6px 12px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: 12,
+                fontFamily: 'inherit',
+                marginBottom: 16,
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--lime)'; e.currentTarget.style.color = 'var(--lime)' }}
+              onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border-bright)'; e.currentTarget.style.color = 'var(--muted)' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              <span>Indietro</span>
+            </button>
+          )
+        })()}
+        {children}
+      </main>
 
       {/* BOTTOM NAV MOBILE */}
       <nav className="bottom-nav">
