@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext.jsx'
 import { api } from '../lib/api.js'
 import { GRADE_LORE } from '../lib/lore.js'
 import { isGunshotEnabled, setGunshotEnabled } from '../components/Gunshot.jsx'
+import { isAiBotEnabled, setAiBotEnabled } from '../components/AiBotWidget.jsx'
 import Stemma from '../components/Stemma.jsx'
 
 export default function Personale() {
@@ -14,6 +15,7 @@ export default function Personale() {
   const [dossier, setDossier] = useState(null)
   const [showInAlbo, setShowInAlbo] = useState(true)
   const [gunshot, setGunshot] = useState(isGunshotEnabled())
+  const [aiBot, setAiBot] = useState(isAiBotEnabled())
 
   useEffect(() => {
     api.dossier().then(d => {
@@ -156,6 +158,11 @@ export default function Personale() {
           icon="◎"
           label="Effetto sparo al click"
           trailing={<Toggle value={gunshot} onChange={v => { setGunshot(v); setGunshotEnabled(v) }} />}
+        />
+        <SectionItem
+          icon="◉"
+          label="Assistente del Comando"
+          trailing={<Toggle value={aiBot} onChange={v => { setAiBot(v); setAiBotEnabled(v) }} />}
         />
       </Section>
 

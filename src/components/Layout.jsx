@@ -9,6 +9,7 @@ import AchievementToast from './AchievementToast.jsx'
 import Crosshair from './Crosshair.jsx'
 import Gunshot from './Gunshot.jsx'
 import EasterConsole from './EasterConsole.jsx'
+import AiBotWidget from './AiBotWidget.jsx'
 
 // Icone SVG sobrie, militari
 const Icons = {
@@ -142,6 +143,7 @@ export default function Layout({ children }) {
       <Crosshair />
       <Gunshot />
       <EasterConsole open={easterOpen} onClose={() => setEasterOpen(false)} />
+      <AiBotWidget />
       <div className="app-shell" style={{ paddingBottom: 32 }}>
       {/* SIDEBAR DESKTOP */}
       <aside className="sidebar sidebar-desktop">
