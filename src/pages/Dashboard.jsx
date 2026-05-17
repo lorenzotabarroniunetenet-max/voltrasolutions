@@ -42,13 +42,26 @@ export default function Dashboard() {
 
   if (loading) return <div style={{ color: 'var(--muted)', padding: 40 }}>Caricamento...</div>
 
+  // Gamification widgets - sempre visibili
+  const gamifGrid = (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <DailyStreak />
+      <TiroDelComando />
+    </div>
+  )
+
   if (accounts.length === 0) {
     return (
-      <div className="card" style={{ textAlign: 'center', padding: 60 }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🎖</div>
-        <h2 className="display" style={{ margin: '0 0 12px', fontSize: 24 }}>Nessuna missione in corso</h2>
-        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>Scegli il tuo grado per dare inizio al servizio.</p>
-        <a href="/buy" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }}>Promozione di Grado</a>
+      <div>
+        <h1 className="display" style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>Quartier Generale</h1>
+        <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 24 }}>Stato di Servizio</div>
+        {gamifGrid}
+        <div className="card" style={{ textAlign: 'center', padding: 60 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🎖</div>
+          <h2 className="display" style={{ margin: '0 0 12px', fontSize: 24 }}>Nessuna missione in corso</h2>
+          <p style={{ color: 'var(--muted)', marginBottom: 24 }}>Scegli il tuo grado per dare inizio al servizio.</p>
+          <a href="/buy" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }}>Promozione di Grado</a>
+        </div>
       </div>
     )
   }
