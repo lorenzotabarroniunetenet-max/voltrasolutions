@@ -37,12 +37,20 @@ export const api = {
   programs: () => request('/api/purchase/programs'),
   paymentInfo: () => request('/api/purchase/payment-info'),
   requestPurchase: (data) => request('/api/purchase/request', { method: 'POST', body: JSON.stringify(data) }),
+  orderStatus: (id) => request(`/api/purchase/order/${id}`),
+  approveInfo: (id, token) => request(`/api/purchase/approve-info/${id}?token=${encodeURIComponent(token)}`),
+  approveByToken: (id, token) => request(`/api/purchase/approve/${id}`, { method: 'POST', body: JSON.stringify({ token }) }),
 
   contactInfo: () => request('/api/contact/info'),
   sendContact: (data) => request('/api/contact/send', { method: 'POST', body: JSON.stringify(data) }),
 
   // Admin
   adminUsers: () => request('/api/admin/users'),
+  adminGetUser: (id) => request(`/api/admin/users/${id}`),
+  adminOrders: (status) => request(`/api/admin/orders${status ? `?status=${status}` : ''}`),
+  adminGetOrder: (id) => request(`/api/admin/orders/${id}`),
+  adminApproveOrder: (id) => request(`/api/admin/orders/${id}/approve`, { method: 'POST' }),
+  adminRejectOrder: (id) => request(`/api/admin/orders/${id}/reject`, { method: 'POST' }),
   adminUserDetail: (id) => request(`/api/admin/users/${id}`),
   adminUpdateUser: (id, data) => request(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   adminApproveUser: (id) => request(`/api/admin/users/${id}/approve`, { method: 'POST' }),

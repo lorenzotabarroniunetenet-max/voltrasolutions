@@ -27,6 +27,8 @@ import Dashboard from './pages/Dashboard.jsx'
 import Payout from './pages/Payout.jsx'
 import BuyProgram from './pages/BuyProgram.jsx'
 import AdminPanel from './pages/AdminPanel.jsx'
+import ApprovaOrdine from './pages/ApprovaOrdine.jsx'
+import SchedaUtente from './pages/SchedaUtente.jsx'
 import Layout from './components/Layout.jsx'
 import Ceremony from './components/Ceremony.jsx'
 
@@ -91,6 +93,8 @@ export default function App() {
       <Route path="/mappa" element={<PrivateRoute><Layout><MappaOperazioni /></Layout></PrivateRoute>} />
       <Route path="/sala-fondatori" element={<PrivateRoute><SalaFondatori /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute admin><Layout><AdminPanel /></Layout></PrivateRoute>} />
+      <Route path="/admin/approva/:id" element={<PrivateRoute admin><ApprovaOrdine /></PrivateRoute>} />
+      <Route path="/admin/utente/:id" element={<PrivateRoute admin><Layout><SchedaUtente /></Layout></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </>

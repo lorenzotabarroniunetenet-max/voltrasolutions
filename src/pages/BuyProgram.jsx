@@ -49,6 +49,7 @@ export default function BuyProgram() {
   const [selected, setSelected] = useState(null)
   const [selectedNetwork, setSelectedNetwork] = useState(null)
   const [txHash, setTxHash] = useState('')
+  const [receiptUrl, setReceiptUrl] = useState('')
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState(null)
   const [couponErr, setCouponErr] = useState('')
@@ -106,6 +107,7 @@ export default function BuyProgram() {
         programId: selected.id,
         network: selectedNetwork,
         txHash: txHash.trim(),
+        receiptUrl: receiptUrl.trim() || undefined,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
       })
       setStep('done')
@@ -114,13 +116,14 @@ export default function BuyProgram() {
 
   if (step === 'done') {
     return (
-      <div className="card" style={{ textAlign: 'center', padding: 60, maxWidth: 520, margin: '40px auto' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🎖</div>
-        <h2 className="display" style={{ margin: '0 0 12px', fontSize: 22 }}>Pagamento registrato</h2>
+      <div className="card" style={{ textAlign: 'center', padding: 60, maxWidth: 520, margin: '40px auto', background: 'linear-gradient(135deg, rgba(255,165,2,0.04), var(--surface))', border: '1px solid rgba(255,165,2,0.3)' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
+        <h2 className="display" style={{ margin: '0 0 12px', fontSize: 22 }}>In attesa di verifica</h2>
         <p style={{ color: 'var(--muted)', marginBottom: 24, lineHeight: 1.6 }}>
-          La TxHash è stata trasmessa al Comando. Riceverai conferma a breve sul canale Telegram.
+          Il Comando ha ricevuto la richiesta di promozione e procederà alla verifica del versamento.
+          L'attivazione del grado avverrà entro 24 ore. Riceverai conferma via email.
         </p>
-        <button onClick={() => { setStep('select'); setSelected(null); setTxHash(''); setErr(''); }} className="btn-primary">Torna ai gradi</button>
+        <button onClick={() => { setStep('select'); setSelected(null); setTxHash(''); setReceiptUrl(''); setErr(''); }} className="btn-primary">Torna ai gradi</button>
       </div>
     )
   }
@@ -306,6 +309,21 @@ export default function BuyProgram() {
                     </div>
                   </div>
 
+                  {/* Receipt URL opzionale */}
+                  <div style={{ marginBottom: 16 }}>
+                    <label className="label" style={{ display: 'flex', alignItems: 'center' }}>
+                      Link ricevuta (opzionale)
+                      <Tooltip text="Opzionale: incolla un link allo screenshot della ricevuta (es. caricato su Google Drive, Imgur o simili). Aiuta il Comando a verificare più rapidamente." />
+                    </label>
+                    <input
+                      className="voltra-input"
+                      value={receiptUrl}
+                      onChange={e => setReceiptUrl(e.target.value)}
+                      placeholder="https://..."
+                      style={{ fontFamily: 'monospace', fontSize: 12 }}
+                    />
+                  </div>
+
                   {err && <div style={{ color: '#ff4757', fontSize: 13, marginBottom: 12 }}>{err}</div>}
 
                   <button
@@ -314,7 +332,7 @@ export default function BuyProgram() {
                     className="btn-primary"
                     style={{ width: '100%', justifyContent: 'center', opacity: (submitting || !txHash.trim()) ? 0.5 : 1, cursor: (submitting || !txHash.trim()) ? 'not-allowed' : 'pointer' }}
                   >
-                    {submitting ? 'Invio in corso...' : 'Conferma pagamento →'}
+                    {submitting ? 'Invio in corso...' : '📡 Notifica Comando →'}
                   </button>
                 </>
               )}

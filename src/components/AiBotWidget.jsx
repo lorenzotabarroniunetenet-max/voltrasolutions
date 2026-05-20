@@ -177,10 +177,8 @@ export default function AiBotWidget() {
       <button
         onClick={() => setOpen(!open)}
         aria-label="Apri assistente"
+        className="voltra-ai-trigger"
         style={{
-          position: 'fixed',
-          bottom: 20,
-          right: 20,
           width: 56,
           height: 56,
           borderRadius: '50%',
@@ -209,10 +207,7 @@ export default function AiBotWidget() {
 
       {/* Widget */}
       {open && (
-        <div style={{
-          position: 'fixed',
-          bottom: 20,
-          right: 20,
+        <div className="voltra-ai-panel" style={{
           width: 360,
           maxWidth: 'calc(100vw - 24px)',
           height: 540,

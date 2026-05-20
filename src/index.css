@@ -697,3 +697,12 @@ button { font-family: inherit; cursor: pointer; }
 /* AI Bot animations */
 @keyframes aiSlideIn { from { transform: scale(0.85) translateY(20px); opacity: 0 } to { transform: scale(1) translateY(0); opacity: 1 } }
 @keyframes aiTyping { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0) } 30% { opacity: 1; transform: translateY(-3px) } }
+
+/* AI Bot widget positioning */
+.voltra-ai-trigger { position: fixed; bottom: 90px; right: 16px; }
+.voltra-ai-panel { position: fixed; bottom: 90px; right: 16px; }
+
+@media (min-width: 1024px) {
+  .voltra-ai-trigger { bottom: 24px; right: 24px; }
+  .voltra-ai-panel { bottom: 24px; right: 24px; }
+}

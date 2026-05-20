@@ -1,4 +1,5 @@
 import { useEffect, useState, Component } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api.js'
 
 class ErrorBoundary extends Component {
@@ -28,6 +29,7 @@ export default function AdminPanel() {
   const tabs = [
     { id: 'overview', label: 'Quadro Generale' },
     { id: 'analytics', label: 'Analytics' },
+    { id: 'orders', label: 'Promozioni' },
     { id: 'users', label: 'Utenti' }, { id: 'briefings', label: 'Briefings' },
     { id: 'documents', label: 'Documenti' },
     { id: 'coupons', label: 'Coupon' },
@@ -59,6 +61,7 @@ export default function AdminPanel() {
           <ErrorBoundary>
             {tab === 'overview' && <OverviewTab />}
             {tab === 'analytics' && <AnalyticsTab />}
+            {tab === 'orders' && <OrdersTab />}
             {tab === 'users' && <UsersTab onSelectUser={setUserDetailId} />}
             {tab === 'briefings' && <BriefingsTab />}
             {tab === 'documents' && <DocumentsTab />}
@@ -73,6 +76,86 @@ export default function AdminPanel() {
         </>
       )}
     </ErrorBoundary>
+  )
+}
+
+function OrdersTab() {
+  const [orders, setOrders] = useState(null)
+  const [filter, setFilter] = useState('PENDING')
+  const [busy, setBusy] = useState(null)
+
+  const load = () => {
+    api.adminOrders(filter || undefined).then(setOrders).catch(() => setOrders([]))
+  }
+  useEffect(() => { load() }, [filter])
+
+  const approve = async (id) => {
+    setBusy(id)
+    try { await api.adminApproveOrder(id); load() } catch (e) { alert(e.message) } finally { setBusy(null) }
+  }
+  const reject = async (id) => {
+    if (!confirm('Rifiutare questa richiesta di promozione?')) return
+    setBusy(id)
+    try { await api.adminRejectOrder(id); load() } catch (e) { alert(e.message) } finally { setBusy(null) }
+  }
+
+  const fmt = (d) => new Date(d).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const badge = (s) => ({
+    padding: '3px 9px', borderRadius: 999, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700,
+    background: s === 'APPROVED' ? 'rgba(180,255,57,0.1)' : s === 'REJECTED' ? 'rgba(255,71,87,0.1)' : 'rgba(255,165,2,0.1)',
+    color: s === 'APPROVED' ? 'var(--lime)' : s === 'REJECTED' ? '#ff4757' : '#ffa502',
+    border: `1px solid ${s === 'APPROVED' ? 'rgba(180,255,57,0.3)' : s === 'REJECTED' ? 'rgba(255,71,87,0.3)' : 'rgba(255,165,2,0.3)'}`,
+  })
+
+  if (!orders) return <div style={{ color: 'var(--muted)', padding: 20 }}>Caricamento...</div>
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+        {[['PENDING', 'In attesa'], ['APPROVED', 'Approvate'], ['REJECTED', 'Rifiutate'], ['', 'Tutte']].map(([v, l]) => (
+          <button key={v} onClick={() => setFilter(v)} style={{
+            padding: '6px 14px', background: filter === v ? 'var(--lime)' : 'var(--surface-2)',
+            border: '1px solid var(--border)', color: filter === v ? '#000' : 'var(--muted)',
+            borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+          }}>{l}</button>
+        ))}
+      </div>
+
+      {orders.length === 0 && <div style={{ color: 'var(--muted)', padding: 20, textAlign: 'center' }}>Nessuna promozione {filter === 'PENDING' ? 'in attesa' : ''}.</div>}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {orders.map(o => (
+          <div key={o.id} className="card" style={{ padding: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{o.user?.name} <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 12 }}>· {o.user?.email}</span></div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'monospace', marginTop: 2 }}>{o.user?.matricola || 'N/D'} · {fmt(o.createdAt)}</div>
+              </div>
+              <span style={badge(o.status)}>{o.status === 'APPROVED' ? 'Approvato' : o.status === 'REJECTED' ? 'Rifiutato' : 'In attesa'}</span>
+            </div>
+
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, marginBottom: 10 }}>
+              <div><span style={{ color: 'var(--muted)' }}>Grado: </span><strong style={{ color: 'var(--lime)' }}>{o.programName}</strong></div>
+              <div><span style={{ color: 'var(--muted)' }}>Importo: </span><strong>{o.amount} {o.currency}</strong>{o.network ? ` (${o.network})` : ''}</div>
+            </div>
+
+            {o.txHash && <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--muted)', wordBreak: 'break-all', marginBottom: 6 }}>TxHash: {o.txHash}</div>}
+            {o.receiptUrl && <a href={o.receiptUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: 'var(--lime)', textDecoration: 'underline' }}>📎 Apri ricevuta</a>}
+
+            {o.status === 'PENDING' && (
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button onClick={() => approve(o.id)} disabled={busy === o.id} className="btn-primary" style={{ flex: 1, padding: 10, fontSize: 12 }}>
+                  {busy === o.id ? '...' : '✓ Approva e attiva grado'}
+                </button>
+                <button onClick={() => reject(o.id)} disabled={busy === o.id} style={{ flex: 1, padding: 10, fontSize: 12, background: 'transparent', border: '1px solid #ff4757', color: '#ff4757', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>
+                  ✕ Rifiuta
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -924,6 +1007,7 @@ function UsersTab({ onSelectUser }) {
                         <button onClick={e => revoke(e, u.id)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderColor: 'var(--red)', color: 'var(--red)' }}>Revoca</button>
                       )}
                       <button onClick={e => { e.stopPropagation(); onSelectUser(u.id) }} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11 }}>Apri →</button>
+                      <a href={`/admin/utente/${u.id}`} onClick={e => e.stopPropagation()} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11, textDecoration: 'none', display: 'inline-block', marginLeft: 6 }}>Scheda →</a>
                       <button onClick={e => remove(e, u.id, u.name)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderColor: '#ff4757', color: '#ff4757' }} title="Elimina account definitivamente">Elimina</button>
                     </div>
                   </Td>
