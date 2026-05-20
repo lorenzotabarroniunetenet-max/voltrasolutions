@@ -98,7 +98,7 @@ export default function SchedaUtente() {
             {(user.serviceLog || []).length === 0 && <div style={{ color: 'var(--muted)', fontSize: 13 }}>Nessun evento registrato.</div>}
             {(user.serviceLog || []).map((e, i) => {
               const color = e.type === 'promotion' ? 'var(--lime)' : e.type === 'note' ? 'var(--muted)' : e.type === 'decoration' ? 'var(--gold)' : 'var(--lime)'
-              return <div key={i}>{timelineItem(e.createdAt, e.title, e.description, color)}</div>
+              return <div key={i}>{timelineItem(e.occurredAt, e.title, e.body, color)}</div>
             })}
           </div>
         )}
