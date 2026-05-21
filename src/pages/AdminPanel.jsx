@@ -30,6 +30,7 @@ export default function AdminPanel() {
     { id: 'overview', label: 'Quadro Generale' },
     { id: 'analytics', label: 'Analytics' },
     { id: 'orders', label: 'Promozioni' },
+    { id: 'tickets', label: 'Ticket' },
     { id: 'users', label: 'Utenti' }, { id: 'briefings', label: 'Briefings' },
     { id: 'documents', label: 'Documenti' },
     { id: 'coupons', label: 'Coupon' },
@@ -62,6 +63,7 @@ export default function AdminPanel() {
             {tab === 'overview' && <OverviewTab />}
             {tab === 'analytics' && <AnalyticsTab />}
             {tab === 'orders' && <OrdersTab />}
+            {tab === 'tickets' && <TicketsTab />}
             {tab === 'users' && <UsersTab onSelectUser={setUserDetailId} />}
             {tab === 'briefings' && <BriefingsTab />}
             {tab === 'documents' && <DocumentsTab />}
@@ -76,6 +78,74 @@ export default function AdminPanel() {
         </>
       )}
     </ErrorBoundary>
+  )
+}
+
+function TicketsTab() {
+  const [tickets, setTickets] = useState(null)
+  const [filter, setFilter] = useState('OPEN')
+
+  const load = () => {
+    api.adminTickets(filter || undefined).then(setTickets).catch(() => setTickets([]))
+  }
+  useEffect(() => { load() }, [filter])
+
+  const setStatus = async (id, status) => {
+    await api.adminUpdateTicket(id, status)
+    load()
+  }
+
+  const fmt = (d) => new Date(d).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const catColor = { pagamento: '#ffa502', tecnico: '#36a2eb', onorificenze: '#E8C84A', grado: '#B4FF39', altro: '#888' }
+  const statusBadge = (s) => ({
+    padding: '3px 9px', borderRadius: 999, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700,
+    background: s === 'OPEN' ? 'rgba(255,165,2,0.1)' : s === 'CLOSED' ? 'rgba(136,136,136,0.1)' : 'rgba(54,162,235,0.1)',
+    color: s === 'OPEN' ? '#ffa502' : s === 'CLOSED' ? '#555' : '#36a2eb',
+    border: `1px solid ${s === 'OPEN' ? 'rgba(255,165,2,0.3)' : s === 'CLOSED' ? 'rgba(136,136,136,0.2)' : 'rgba(54,162,235,0.3)'}`,
+  })
+
+  if (!tickets) return <div style={{ color: 'var(--muted)', padding: 20 }}>Caricamento...</div>
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+        {[['OPEN', 'Aperti'], ['IN_PROGRESS', 'In corso'], ['CLOSED', 'Chiusi'], ['', 'Tutti']].map(([v, l]) => (
+          <button key={v} onClick={() => setFilter(v)} style={{
+            padding: '6px 14px', background: filter === v ? 'var(--lime)' : 'var(--surface-2)',
+            border: '1px solid var(--border)', color: filter === v ? '#000' : 'var(--muted)',
+            borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+          }}>{l}</button>
+        ))}
+      </div>
+
+      {tickets.length === 0 && <div style={{ color: 'var(--muted)', padding: 20, textAlign: 'center' }}>Nessun ticket.</div>}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {tickets.map(t => (
+          <div key={t.id} className="card" style={{ padding: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', color: catColor[t.category] || '#888', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.category}</span>
+                  <span style={statusBadge(t.status)}>{t.status === 'OPEN' ? 'Aperto' : t.status === 'CLOSED' ? 'Chiuso' : 'In corso'}</span>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{t.subject}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{t.user?.name} · {t.user?.email} · {fmt(t.createdAt)}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 8, marginBottom: 10 }}>
+              {t.message}
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {t.status !== 'IN_PROGRESS' && <button onClick={() => setStatus(t.id, 'IN_PROGRESS')} style={{ padding: '6px 12px', background: 'rgba(54,162,235,0.1)', border: '1px solid rgba(54,162,235,0.3)', color: '#36a2eb', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>In lavorazione</button>}
+              {t.status !== 'CLOSED' && <button onClick={() => setStatus(t.id, 'CLOSED')} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Chiudi ticket</button>}
+              {t.status === 'CLOSED' && <button onClick={() => setStatus(t.id, 'OPEN')} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Riapri</button>}
+              <a href={`mailto:${t.user?.email}?subject=Re: ${encodeURIComponent(t.subject)}`} style={{ padding: '6px 12px', background: 'rgba(180,255,57,0.1)', border: '1px solid rgba(180,255,57,0.3)', color: 'var(--lime)', borderRadius: 6, fontSize: 11, fontWeight: 700, textDecoration: 'none', display: 'inline-block' }}>📧 Rispondi via email</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 

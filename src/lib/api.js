@@ -40,6 +40,9 @@ export const api = {
   orderStatus: (id) => request(`/api/purchase/order/${id}`),
   approveInfo: (id, token) => request(`/api/purchase/approve-info/${id}?token=${encodeURIComponent(token)}`),
   approveByToken: (id, token) => request(`/api/purchase/approve/${id}`, { method: 'POST', body: JSON.stringify({ token }) }),
+  telegramStatus: () => request('/api/telegram/status'),
+  telegramLinkToken: () => request('/api/telegram/link-token', { method: 'POST' }),
+  telegramUnlink: () => request('/api/telegram/unlink', { method: 'DELETE' }),
 
   contactInfo: () => request('/api/contact/info'),
   sendContact: (data) => request('/api/contact/send', { method: 'POST', body: JSON.stringify(data) }),
@@ -51,6 +54,8 @@ export const api = {
   adminGetOrder: (id) => request(`/api/admin/orders/${id}`),
   adminApproveOrder: (id) => request(`/api/admin/orders/${id}/approve`, { method: 'POST' }),
   adminRejectOrder: (id) => request(`/api/admin/orders/${id}/reject`, { method: 'POST' }),
+  adminTickets: (status) => request(`/api/admin/tickets${status ? `?status=${status}` : ''}`),
+  adminUpdateTicket: (id, status) => request(`/api/admin/tickets/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   adminUserDetail: (id) => request(`/api/admin/users/${id}`),
   adminUpdateUser: (id, data) => request(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   adminApproveUser: (id) => request(`/api/admin/users/${id}/approve`, { method: 'POST' }),

@@ -16,13 +16,32 @@ export default function Personale() {
   const [showInAlbo, setShowInAlbo] = useState(true)
   const [gunshot, setGunshot] = useState(isGunshotEnabled())
   const [aiBot, setAiBot] = useState(isAiBotEnabled())
+  const [tgLinked, setTgLinked] = useState(null)
+  const [tgLoading, setTgLoading] = useState(false)
+  const [tgUrl, setTgUrl] = useState(null)
 
   useEffect(() => {
     api.dossier().then(d => {
       setDossier(d)
       setShowInAlbo(d.showInAlbo !== false)
     }).catch(() => {})
+    api.telegramStatus().then(d => setTgLinked(d.linked)).catch(() => {})
   }, [])
+
+  const handleTelegramLink = async () => {
+    setTgLoading(true)
+    try {
+      const { url } = await api.telegramLinkToken()
+      setTgUrl(url)
+      window.open(url, '_blank')
+    } catch (e) {} finally { setTgLoading(false) }
+  }
+
+  const handleTelegramUnlink = async () => {
+    await api.telegramUnlink()
+    setTgLinked(false)
+    setTgUrl(null)
+  }
 
   const handleLogout = () => { logout(); nav('/login') }
 
@@ -154,6 +173,31 @@ export default function Personale() {
       <Section title="Sicurezza">
         <SectionItem to="/cambio-password" icon="🔐" label="Cambia credenziale" />
         <SectionItem to="/sicurezza-accesso" icon="🔒" label="Verifica via email (2FA)" />
+
+        {/* Collega Telegram */}
+        <div style={{ marginTop: 8 }}>
+          {tgLinked === true ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'rgba(180,255,57,0.04)', border: '1px solid rgba(180,255,57,0.2)', borderRadius: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 18 }}>✅</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Telegram collegato</span>
+              </div>
+              <button onClick={handleTelegramUnlink} style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', padding: '4px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}>Scollega</button>
+            </div>
+          ) : (
+            <div style={{ padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 18 }}>✈️</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Collega Telegram</span>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, lineHeight: 1.5 }}>Ricevi notifiche del Comando e gestisci la tua missione da Telegram.</div>
+              <button onClick={handleTelegramLink} disabled={tgLoading} className="btn-primary" style={{ width: '100%', padding: '10px', fontSize: 12 }}>
+                {tgLoading ? 'Generazione link...' : '🔗 Collega account Telegram'}
+              </button>
+              {tgUrl && <div style={{ marginTop: 8, fontSize: 11, color: 'var(--muted)' }}>Link aperto. Hai 10 minuti per completare il collegamento.</div>}
+            </div>
+          )}
+        </div>
         <SectionItem
           icon="◎"
           label="Effetto sparo al click"
