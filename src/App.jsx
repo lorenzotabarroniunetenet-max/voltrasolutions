@@ -93,7 +93,7 @@ export default function App() {
       <Route path="/mappa" element={<PrivateRoute><Layout><MappaOperazioni /></Layout></PrivateRoute>} />
       <Route path="/sala-fondatori" element={<PrivateRoute><SalaFondatori /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute admin><Layout><AdminPanel /></Layout></PrivateRoute>} />
-      <Route path="/admin/approva/:id" element={<PrivateRoute admin><ApprovaOrdine /></PrivateRoute>} />
+      <Route path="/admin/approva/:id" element={<ApprovaOrdine />} />
       <Route path="/admin/utente/:id" element={<PrivateRoute admin><Layout><SchedaUtente /></Layout></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
       </Routes>
