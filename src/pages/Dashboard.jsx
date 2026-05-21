@@ -135,6 +135,9 @@ export default function Dashboard() {
         </Link>
       )}
 
+      {/* Missione in corso */}
+      <MissioneInCorso account={account} program={program} />
+
       {/* Program info bar */}
       <div className="card" style={{ marginBottom: 24, padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, fontSize: 13 }}>
@@ -312,6 +315,96 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function MissioneInCorso({ account, program }) {
+  const status = account?.status || 'ACTIVE'
+
+  const CONFIG = {
+    ACTIVE: {
+      bg: 'linear-gradient(135deg, rgba(180,255,57,0.06), rgba(0,0,0,0.4))',
+      border: 'rgba(180,255,57,0.3)',
+      color: 'var(--lime)',
+      icon: '⚔️',
+      label: 'Missione in corso',
+      title: 'Sei schierato al fronte',
+      desc: 'La tua operazione è attiva. Mantieni la posizione e rispetta gli ordini del Comando.',
+      live: true,
+    },
+    PASSED: {
+      bg: 'linear-gradient(135deg, rgba(232,200,74,0.06), rgba(0,0,0,0.4))',
+      border: 'rgba(232,200,74,0.4)',
+      color: 'var(--gold)',
+      icon: '🎖',
+      label: 'Missione compiuta',
+      title: 'Obiettivo raggiunto',
+      desc: 'Hai completato la missione con onore. Attendi gli ordini per la prossima operazione.',
+      cta: true,
+    },
+    PAID_OUT: {
+      bg: 'linear-gradient(135deg, rgba(232,200,74,0.06), rgba(0,0,0,0.4))',
+      border: 'rgba(232,200,74,0.4)',
+      color: 'var(--gold)',
+      icon: '🏅',
+      label: 'Missione liquidata',
+      title: 'Bottino riscosso',
+      desc: 'Il rimborso è stato erogato. Una nuova promozione ti attende per tornare in campo.',
+      cta: true,
+    },
+    FAILED: {
+      bg: 'linear-gradient(135deg, rgba(255,71,87,0.06), rgba(0,0,0,0.4))',
+      border: 'rgba(255,71,87,0.3)',
+      color: '#ff4757',
+      icon: '🪖',
+      label: 'Missione conclusa',
+      title: 'Caduto in servizio',
+      desc: 'L\'operazione è terminata. Il Comando ti offre la possibilità di rientrare in campo con una nuova promozione.',
+      cta: true,
+    },
+  }
+
+  const c = CONFIG[status] || CONFIG.ACTIVE
+
+  return (
+    <div style={{
+      marginBottom: 20,
+      padding: 24,
+      borderRadius: 14,
+      background: c.bg,
+      border: `1px solid ${c.border}`,
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 40, lineHeight: 1 }}>{c.icon}</div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 11, color: c.color, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700 }}>
+              {c.label}
+            </span>
+            {c.live && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 9, color: c.color, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.color, animation: 'pulse 1.5s ease-in-out infinite' }} />
+                Live
+              </span>
+            )}
+          </div>
+          <div className="display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>{c.title}</div>
+          <div style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.6 }}>{c.desc}</div>
+          {c.live && program && (
+            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>
+              Operazione: <strong style={{ color: 'var(--text)' }}>{program.name}</strong>
+            </div>
+          )}
+        </div>
+        {c.cta && (
+          <a href="/buy" className="btn-primary" style={{ textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Nuova Promozione →
+          </a>
+        )}
       </div>
     </div>
   )
