@@ -29,7 +29,16 @@ import BuyProgram from './pages/BuyProgram.jsx'
 import AdminPanel from './pages/AdminPanel.jsx'
 import ApprovaOrdine from './pages/ApprovaOrdine.jsx'
 import SchedaUtente from './pages/SchedaUtente.jsx'
+import AppMobile from './pages/AppMobile.jsx'
+import GiochiPage from './pages/GiochiPage.jsx'
 import Layout from './components/Layout.jsx'
+import InstallBanner from './components/InstallBanner.jsx'
+
+function isStandaloneOrMobile() {
+  const standalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+  const mobile = window.innerWidth < 640
+  return standalone || mobile
+}
 import Ceremony from './components/Ceremony.jsx'
 
 function PrivateRoute({ children, admin }) {
@@ -77,6 +86,8 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/dashboard" element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
+      <Route path="/app" element={<PrivateRoute><AppMobile /></PrivateRoute>} />
+      <Route path="/giochi" element={<PrivateRoute><GiochiPage /></PrivateRoute>} />
       <Route path="/payout" element={<PrivateRoute><Layout><Payout /></Layout></PrivateRoute>} />
       <Route path="/buy" element={<PrivateRoute><Layout><BuyProgram /></Layout></PrivateRoute>} />
       <Route path="/personale" element={<PrivateRoute><Layout><Personale /></Layout></PrivateRoute>} />
@@ -97,6 +108,7 @@ export default function App() {
       <Route path="/admin/utente/:id" element={<PrivateRoute admin><Layout><SchedaUtente /></Layout></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      <InstallBanner />
     </>
   )
 }
