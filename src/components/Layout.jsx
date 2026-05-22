@@ -1,3 +1,4 @@
+// v3.17 — 2026-05-22
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
