@@ -147,9 +147,13 @@ export default function Layout({ children }) {
       <div className="app-shell" style={{ paddingBottom: 32 }}>
       {/* SIDEBAR DESKTOP */}
       <aside className="sidebar sidebar-desktop">
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, padding: '0 12px', textDecoration: 'none', color: 'inherit' }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '0 12px', textDecoration: 'none', color: 'inherit' }}>
           <span onClick={onBoltClick} title="Comunicazione cifrata" className={unreadCount > 0 ? 'voltra-bolt-pulse' : ''} style={{ fontSize: 26, color: 'var(--lime)', cursor: 'pointer', userSelect: 'none' }}>⚡</span>
           <span className="display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.02em' }}>VOLTRA</span>
+        </Link>
+        <Link to="/app" style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 12px', marginBottom:20, background:'rgba(180,255,57,.04)', border:'1px solid rgba(180,255,57,.15)', borderRadius:8, textDecoration:'none', color:'var(--lime)', fontSize:11, fontWeight:700 }}>
+          <svg width="12" height="12" viewBox="0 0 100 100"><polygon points="58,0 20,55 46,55 34,100 80,40 52,40 68,0" fill="#B4FF39"/></svg>
+          App mobile
         </Link>
         <nav style={{ flex: 1 }}>
           {links.map(l => (
@@ -284,8 +288,76 @@ export default function Layout({ children }) {
             </Link>
           )
         })}
+        <Link to="/app" className={`bottom-nav-item ${loc.pathname === '/app' ? 'active' : ''}`} style={{ color: loc.pathname==='/app' ? 'var(--lime)' : 'var(--muted)' }}>
+          <svg width="20" height="20" viewBox="0 0 100 100"><polygon points="58,0 20,55 46,55 34,100 80,40 52,40 68,0" fill="currentColor"/></svg>
+          <span>App</span>
+        </Link>
       </nav>
+
+      <AppDownloadBtn />
       </div>
     </>
+  )
+}
+
+function AppDownloadBtn() {
+  const [show, setShow] = useState(true)
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+
+  useEffect(() => {
+    // Nascondi se già installata (standalone)
+    if (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone) {
+      setShow(false); return
+    }
+    // Nascondi se già dismessa questa sessione
+    if (sessionStorage.getItem('app_btn_dismissed')) { setShow(false); return }
+
+    const onPrompt = (e) => { e.preventDefault(); setDeferredPrompt(e) }
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    return () => window.removeEventListener('beforeinstallprompt', onPrompt)
+  }, [])
+
+  const handleClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') { setShow(false); return }
+    }
+    // iOS o nessun prompt — vai alla pagina app
+    window.location.href = '/app'
+  }
+
+  const dismiss = (e) => {
+    e.stopPropagation()
+    sessionStorage.setItem('app_btn_dismissed', '1')
+    setShow(false)
+  }
+
+  if (!show) return null
+
+  return (
+    <div style={{
+      position: 'fixed',
+      bottom: 'calc(64px + env(safe-area-inset-bottom, 0px) + 10px)',
+      right: 14,
+      zIndex: 300,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      background: '#050505',
+      border: '1px solid rgba(180,255,57,0.3)',
+      borderRadius: 999,
+      padding: '7px 10px 7px 12px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.7), 0 0 0 1px rgba(180,255,57,0.08)',
+      cursor: 'pointer',
+      animation: 'fadeSlideUp .35s ease',
+    }} onClick={handleClick}>
+      <svg width="14" height="14" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
+        <polygon points="58,0 20,55 46,55 34,100 80,40 52,40 68,0" fill="#B4FF39"/>
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--lime)', whiteSpace: 'nowrap', letterSpacing: '.02em' }}>Installa app</span>
+      <button onClick={dismiss} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,.3)', cursor: 'pointer', fontSize: 13, padding: '0 2px', lineHeight: 1 }}>✕</button>
+      <style>{`@keyframes fadeSlideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    </div>
   )
 }
