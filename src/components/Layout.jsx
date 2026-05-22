@@ -120,8 +120,8 @@ export default function Layout({ children }) {
   // Bottom nav mobile: 5 voci principali
   const bottomNav = [
     { to: '/dashboard', label: 'Quartier', icon: 'hq' },
-    { to: '/briefing', label: 'Briefing', icon: 'briefing' },
-    { to: '/buy', label: 'Promozione', icon: 'promo' },
+    { to: '/app',       label: 'App', icon: null },
+    { to: '/buy',       label: 'Missione', icon: 'promo' },
     { to: '/fascicolo', label: 'Fascicolo', icon: 'dossier' },
     { to: '/personale', label: 'Altro', icon: 'more' },
   ]
@@ -283,15 +283,14 @@ export default function Layout({ children }) {
           const active = loc.pathname === l.to
           return (
             <Link key={l.to} to={l.to} className={`bottom-nav-item ${active ? 'active' : ''}`}>
-              {Icons[l.icon](20)}
+              {l.icon === null
+                ? <svg width="20" height="20" viewBox="0 0 100 100"><polygon points="58,0 20,55 46,55 34,100 80,40 52,40 68,0" fill={active ? '#B4FF39' : 'currentColor'}/></svg>
+                : Icons[l.icon](20)
+              }
               <span>{l.label}</span>
             </Link>
           )
         })}
-        <Link to="/app" className={`bottom-nav-item ${loc.pathname === '/app' ? 'active' : ''}`} style={{ color: loc.pathname==='/app' ? 'var(--lime)' : 'var(--muted)' }}>
-          <svg width="20" height="20" viewBox="0 0 100 100"><polygon points="58,0 20,55 46,55 34,100 80,40 52,40 68,0" fill="currentColor"/></svg>
-          <span>App</span>
-        </Link>
       </nav>
 
       <AppDownloadBtn />
