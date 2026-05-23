@@ -249,7 +249,8 @@ export default function Layout({ children }) {
         {(() => {
           // Pagine "root" che non mostrano back: bottom nav + dashboard
           const rootPages = ['/dashboard', '/briefing', '/buy', '/fascicolo', '/personale', '/']
-          const showBack = !rootPages.includes(loc.pathname) && loc.pathname !== ''
+          const alwaysBack = ['/contact', '/guida', '/payout', '/albo', '/mappa', '/documenti', '/requisiti', '/calendario']
+          const showBack = alwaysBack.includes(loc.pathname) || (!rootPages.includes(loc.pathname) && loc.pathname !== '')
           if (!showBack) return null
           return (
             <button
