@@ -647,6 +647,11 @@ function UserDetail({ userId, back }) {
   const [snapData, setSnapData] = useState({})
   const [addAccount, setAddAccount] = useState(false)
   const [editAccountId, setEditAccountId] = useState(null)
+  const [userSub, setUserSub] = useState(undefined)
+
+  const BASE = import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'
+  const token = localStorage.getItem('token')
+  const authH = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
   const reload = async () => {
     setLoading(true); setError('')
@@ -656,10 +661,30 @@ function UserDetail({ userId, back }) {
       setUser(u)
       setPrograms(Array.isArray(p) ? p : [])
       setUserForm({ name: u?.name || '', email: u?.email || '', notes: u?.notes || '', emailVerified: !!u?.emailVerified, kycVerifiedAt: u?.kycVerifiedAt || null })
+      // Carica abbonamento utente
+      const subsAll = await fetch(`${BASE}/api/subscriptions`, { headers: authH }).then(r => r.json()).catch(() => [])
+      const sub = Array.isArray(subsAll) ? subsAll.find(s => s.userId === userId) : null
+      setUserSub(sub || null)
     } catch (e) { setError(e.message || 'Errore') }
     finally { setLoading(false) }
   }
   useEffect(() => { reload() }, [userId])
+
+  const createSubForUser = async () => {
+    const endDate = new Date(); endDate.setMonth(endDate.getMonth() + 1)
+    await fetch(`${BASE}/api/subscriptions`, { method: 'POST', headers: authH, body: JSON.stringify({ userId, months: 1, amount: 99 }) })
+    reload()
+  }
+
+  const renewSubForUser = async (id) => {
+    await fetch(`${BASE}/api/subscriptions/${id}/renew`, { method: 'POST', headers: authH, body: JSON.stringify({ months: 1 }) })
+    reload()
+  }
+
+  const suspendSubForUser = async (id, status) => {
+    await fetch(`${BASE}/api/subscriptions/${id}`, { method: 'PATCH', headers: authH, body: JSON.stringify({ status }) })
+    reload()
+  }
 
   const saveUser = async () => {
     try { await api.adminUpdateUser(userId, userForm); setEditUser(false); reload() }
@@ -775,6 +800,37 @@ function UserDetail({ userId, back }) {
             {user.notes && <div style={{ gridColumn: '1/-1' }}><Info label="Note" value={user.notes} /></div>}
           </div>
         )}
+      </div>
+
+      {/* Abbonamento */}
+      <div className="card" style={{ marginBottom: 20, padding: 24, background: userSub?.status === 'ACTIVE' ? 'rgba(180,255,57,.02)' : userSub ? 'rgba(255,71,87,.02)' : undefined, border: userSub?.status === 'ACTIVE' ? '1px solid rgba(180,255,57,.15)' : userSub ? '1px solid rgba(255,71,87,.15)' : undefined }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>💳 Abbonamento</h3>
+          {!userSub && <button onClick={createSubForUser} className="btn-primary" style={{ padding: '6px 14px', fontSize: 12 }}>+ Crea €99/mese</button>}
+        </div>
+        {userSub === undefined && <div style={{ color: 'var(--muted)', fontSize: 13 }}>Caricamento...</div>}
+        {userSub === null && <div style={{ color: 'var(--muted)', fontSize: 13 }}>Nessun abbonamento attivo.</div>}
+        {userSub && (() => {
+          const days = Math.ceil((new Date(userSub.endDate) - new Date()) / 86400000)
+          const statusColor = { ACTIVE: 'var(--lime)', SUSPENDED: '#E8C84A', EXPIRED: 'var(--red)' }
+          return (
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, marginBottom: 14 }}>
+                <Info label="Stato" value={<span style={{ color: statusColor[userSub.status] || 'var(--muted)' }}>{userSub.status}</span>} />
+                <Info label="Importo" value={`€${Number(userSub.amount).toFixed(0)}/mese`} />
+                <Info label="Scadenza" value={new Date(userSub.endDate).toLocaleDateString('it-IT')} />
+                <Info label="Giorni rimasti" value={<span style={{ color: days <= 0 ? 'var(--red)' : days <= 7 ? '#E8C84A' : 'var(--lime)', fontWeight: 700 }}>{Math.max(0, days)}</span>} />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => renewSubForUser(userSub.id)} className="btn-primary" style={{ fontSize: 12, padding: '7px 14px' }}>🔄 Rinnova +1 mese</button>
+                {userSub.status === 'ACTIVE'
+                  ? <button onClick={() => suspendSubForUser(userSub.id, 'SUSPENDED')} className="btn-secondary" style={{ fontSize: 12, padding: '7px 12px' }}>⏸ Sospendi</button>
+                  : <button onClick={() => suspendSubForUser(userSub.id, 'ACTIVE')} className="btn-secondary" style={{ fontSize: 12, padding: '7px 12px' }}>✅ Riattiva</button>
+                }
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       <div className="card" style={{ marginBottom: 20, padding: 24 }}>
@@ -1957,15 +2013,16 @@ function SubscriptionsTab() {
   const [msg, setMsg] = useState(null)
 
   const token = localStorage.getItem('token')
+  const BASE = import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
   const load = async () => {
     setLoading(true)
     try {
-      const url = filter === 'all' ? '/api/subscriptions' : `/api/subscriptions?status=${filter.toUpperCase()}`
+      const url = filter === 'all' ? `${BASE}/api/subscriptions` : `${BASE}/api/subscriptions?status=${filter.toUpperCase()}`
       const [subsR, usersR] = await Promise.all([
         fetch(url, { headers }).then(r => r.json()),
-        fetch('/api/admin/users?role=TRADER&approved=true&limit=200', { headers }).then(r => r.json()),
+        fetch(`${BASE}/api/admin/users?role=TRADER&approved=true&limit=200`, { headers }).then(r => r.json()),
       ])
       setSubs(Array.isArray(subsR) ? subsR : [])
       setUsers(Array.isArray(usersR) ? usersR : usersR?.users || [])
@@ -1978,7 +2035,7 @@ function SubscriptionsTab() {
   const createSub = async () => {
     if (!form.userId) { setMsg({ type: 'error', text: 'Seleziona un membro' }); return }
     try {
-      const r = await fetch('/api/subscriptions', { method: 'POST', headers, body: JSON.stringify({ userId: form.userId, months: Number(form.months), amount: Number(form.amount), notes: form.notes }) })
+      const r = await fetch(`${BASE}/api/subscriptions`, { method: 'POST', headers, body: JSON.stringify({ userId: form.userId, months: Number(form.months), amount: Number(form.amount), notes: form.notes }) })
       if (!r.ok) throw new Error((await r.json()).error)
       setCreating(false); setForm({ userId: '', months: 1, amount: 99, notes: '' })
       setMsg({ type: 'ok', text: 'Abbonamento creato' }); load()
@@ -1986,12 +2043,12 @@ function SubscriptionsTab() {
   }
 
   const renew = async (id) => {
-    await fetch(`/api/subscriptions/${id}/renew`, { method: 'POST', headers, body: JSON.stringify({ months: 1 }) })
+    await fetch(`${BASE}/api/subscriptions/${id}/renew`, { method: 'POST', headers, body: JSON.stringify({ months: 1 }) })
     setMsg({ type: 'ok', text: 'Rinnovato +1 mese' }); load()
   }
 
   const changeStatus = async (id, status) => {
-    await fetch(`/api/subscriptions/${id}`, { method: 'PATCH', headers, body: JSON.stringify({ status }) })
+    await fetch(`${BASE}/api/subscriptions/${id}`, { method: 'PATCH', headers, body: JSON.stringify({ status }) })
     setMsg({ type: 'ok', text: `Stato → ${status}` }); load()
   }
 
