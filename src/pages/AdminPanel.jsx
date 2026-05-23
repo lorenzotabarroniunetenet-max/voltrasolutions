@@ -38,6 +38,7 @@ export default function AdminPanel() {
     { id: 'snapshots', label: 'Snapshots' }, { id: 'payouts', label: 'Payouts' },
     { id: 'programs', label: 'Programmi' }, { id: 'settings', label: 'Settings' },
     { id: 'audit', label: 'Audit' },
+    { id: 'subscriptions', label: '💳 Abbonamenti' },
   ]
 
   return (
@@ -73,6 +74,7 @@ export default function AdminPanel() {
             {tab === 'payouts' && <PayoutsTab />}
             {tab === 'programs' && <ProgramsTab />}
             {tab === 'settings' && <SettingsTab />}
+            {tab === 'subscriptions' && <SubscriptionsTab />}
             {tab === 'audit' && <AuditTab />}
           </ErrorBoundary>
         </>
@@ -1938,6 +1940,157 @@ function PurchaseCounter({ userId, current, onChange }) {
           <button onClick={() => setEditing(true)} className="btn-secondary" style={{ padding: '6px 14px', fontSize: 12 }}>Imposta manualmente</button>
         )}
       </div>
+    </div>
+  )
+}
+
+// ══════════════════════════════
+// SUBSCRIPTIONS TAB
+// ══════════════════════════════
+function SubscriptionsTab() {
+  const [subs, setSubs] = useState([])
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('all')
+  const [creating, setCreating] = useState(false)
+  const [form, setForm] = useState({ userId: '', months: 1, amount: 99, notes: '' })
+  const [msg, setMsg] = useState(null)
+
+  const token = localStorage.getItem('token')
+  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+
+  const load = async () => {
+    setLoading(true)
+    try {
+      const url = filter === 'all' ? '/api/subscriptions' : `/api/subscriptions?status=${filter.toUpperCase()}`
+      const [subsR, usersR] = await Promise.all([
+        fetch(url, { headers }).then(r => r.json()),
+        fetch('/api/admin/users?role=TRADER&approved=true&limit=200', { headers }).then(r => r.json()),
+      ])
+      setSubs(Array.isArray(subsR) ? subsR : [])
+      setUsers(Array.isArray(usersR) ? usersR : usersR?.users || [])
+    } catch (e) { setMsg({ type: 'error', text: e.message }) }
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [filter])
+
+  const createSub = async () => {
+    if (!form.userId) { setMsg({ type: 'error', text: 'Seleziona un membro' }); return }
+    try {
+      const r = await fetch('/api/subscriptions', { method: 'POST', headers, body: JSON.stringify({ userId: form.userId, months: Number(form.months), amount: Number(form.amount), notes: form.notes }) })
+      if (!r.ok) throw new Error((await r.json()).error)
+      setCreating(false); setForm({ userId: '', months: 1, amount: 99, notes: '' })
+      setMsg({ type: 'ok', text: 'Abbonamento creato' }); load()
+    } catch (e) { setMsg({ type: 'error', text: e.message }) }
+  }
+
+  const renew = async (id) => {
+    await fetch(`/api/subscriptions/${id}/renew`, { method: 'POST', headers, body: JSON.stringify({ months: 1 }) })
+    setMsg({ type: 'ok', text: 'Rinnovato +1 mese' }); load()
+  }
+
+  const changeStatus = async (id, status) => {
+    await fetch(`/api/subscriptions/${id}`, { method: 'PATCH', headers, body: JSON.stringify({ status }) })
+    setMsg({ type: 'ok', text: `Stato → ${status}` }); load()
+  }
+
+  const statusColor = { ACTIVE: 'var(--lime)', SUSPENDED: '#E8C84A', EXPIRED: 'var(--red)', CANCELLED: 'var(--muted)' }
+  const statusIcon = { ACTIVE: '✅', SUSPENDED: '⏸', EXPIRED: '🔴', CANCELLED: '❌' }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>💳 Abbonamenti</h2>
+          <div style={{ fontSize: 13, color: 'var(--muted)' }}>{subs.length} abbonamenti</div>
+        </div>
+        <button onClick={() => setCreating(true)} className="btn-primary" style={{ fontSize: 13, padding: '9px 18px' }}>+ Nuovo abbonamento</button>
+      </div>
+
+      {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, background: msg.type === 'ok' ? 'rgba(180,255,57,.08)' : 'rgba(255,71,87,.08)', border: `1px solid ${msg.type === 'ok' ? 'rgba(180,255,57,.2)' : 'rgba(255,71,87,.2)'}`, color: msg.type === 'ok' ? 'var(--lime)' : 'var(--red)', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+        {msg.text} <span style={{ cursor: 'pointer', opacity: .5 }} onClick={() => setMsg(null)}>✕</span>
+      </div>}
+
+      {/* Filtri */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+        {['all', 'active', 'suspended', 'expired'].map(f => (
+          <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid', borderColor: filter === f ? 'var(--lime)' : 'var(--border)', background: filter === f ? 'rgba(180,255,57,.08)' : 'transparent', color: filter === f ? 'var(--lime)' : 'var(--muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {f === 'all' ? 'Tutti' : f === 'active' ? '✅ Attivi' : f === 'suspended' ? '⏸ Sospesi' : '🔴 Scaduti'}
+          </button>
+        ))}
+      </div>
+
+      {/* Form crea */}
+      {creating && (
+        <div className="card" style={{ padding: 20, marginBottom: 20, background: 'rgba(180,255,57,.03)', border: '1px solid rgba(180,255,57,.15)' }}>
+          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Nuovo abbonamento</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 16 }}>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>Membro *</label>
+              <select value={form.userId} onChange={e => setForm(f => ({ ...f, userId: e.target.value }))} style={{ width: '100%', padding: '9px 12px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }}>
+                <option value="">Seleziona membro...</option>
+                {users.map(u => <option key={u.id} value={u.id}>{u.name} — {u.matricola || u.email}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>Mesi</label>
+              <input type="number" min="1" max="24" value={form.months} onChange={e => setForm(f => ({ ...f, months: e.target.value }))} style={{ width: '100%', padding: '9px 12px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>Importo (€)</label>
+              <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} style={{ width: '100%', padding: '9px 12px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>Note</label>
+              <input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Opzionale" style={{ width: '100%', padding: '9px 12px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={createSub} className="btn-primary" style={{ fontSize: 13, padding: '9px 20px' }}>Crea abbonamento</button>
+            <button onClick={() => setCreating(false)} className="btn-secondary" style={{ fontSize: 13, padding: '9px 16px' }}>Annulla</button>
+          </div>
+        </div>
+      )}
+
+      {/* Lista */}
+      {loading ? <div style={{ color: 'var(--muted)', fontSize: 13 }}>Caricamento...</div> : subs.length === 0 ? (
+        <div style={{ color: 'var(--muted)', fontSize: 13, padding: '32px 0', textAlign: 'center' }}>Nessun abbonamento trovato.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {subs.map(s => (
+            <div key={s.id} className="card" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{s.user?.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'JetBrains Mono, monospace' }}>{s.user?.matricola || s.user?.email}</div>
+              </div>
+              <div style={{ textAlign: 'center', minWidth: 80 }}>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>Stato</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: statusColor[s.status] }}>{statusIcon[s.status]} {s.status}</div>
+              </div>
+              <div style={{ textAlign: 'center', minWidth: 90 }}>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>Scadenza</div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{new Date(s.endDate).toLocaleDateString('it-IT')}</div>
+              </div>
+              <div style={{ textAlign: 'center', minWidth: 70 }}>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>Giorni</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: s.daysLeft <= 0 ? 'var(--red)' : s.daysLeft <= 7 ? '#E8C84A' : 'var(--lime)' }}>{Math.max(0, s.daysLeft)}</div>
+              </div>
+              <div style={{ textAlign: 'center', minWidth: 60 }}>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>Importo</div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>€{Number(s.amount).toFixed(0)}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => renew(s.id)} style={{ padding: '6px 12px', background: 'rgba(180,255,57,.08)', border: '1px solid rgba(180,255,57,.2)', color: 'var(--lime)', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>🔄 +1 mese</button>
+                {s.status === 'ACTIVE'
+                  ? <button onClick={() => changeStatus(s.id, 'SUSPENDED')} style={{ padding: '6px 10px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>⏸</button>
+                  : <button onClick={() => changeStatus(s.id, 'ACTIVE')} style={{ padding: '6px 10px', background: 'transparent', border: '1px solid rgba(180,255,57,.2)', color: 'var(--lime)', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>✅</button>
+                }
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
