@@ -31,6 +31,7 @@ import ApprovaOrdine from './pages/ApprovaOrdine.jsx'
 import SchedaUtente from './pages/SchedaUtente.jsx'
 import AppMobile from './pages/AppMobile.jsx'
 import GiochiPage from './pages/GiochiPage.jsx'
+import GuidaOperativa from './pages/GuidaOperativa.jsx'
 import Layout from './components/Layout.jsx'
 import InstallBanner from './components/InstallBanner.jsx'
 
@@ -88,6 +89,7 @@ export default function App() {
       <Route path="/dashboard" element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
       <Route path="/app" element={<PrivateRoute><AppMobile /></PrivateRoute>} />
       <Route path="/giochi" element={<PrivateRoute><GiochiPage /></PrivateRoute>} />
+      <Route path="/guida" element={<PrivateRoute><Layout><GuidaOperativa /></Layout></PrivateRoute>} />
       <Route path="/payout" element={<PrivateRoute><Layout><Payout /></Layout></PrivateRoute>} />
       <Route path="/buy" element={<PrivateRoute><Layout><BuyProgram /></Layout></PrivateRoute>} />
       <Route path="/personale" element={<PrivateRoute><Layout><Personale /></Layout></PrivateRoute>} />

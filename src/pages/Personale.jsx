@@ -19,6 +19,7 @@ export default function Personale() {
   const [tgLinked, setTgLinked] = useState(null)
   const [tgLoading, setTgLoading] = useState(false)
   const [tgUrl, setTgUrl] = useState(null)
+  const [subscription, setSubscription] = useState(undefined) // undefined = loading
 
   useEffect(() => {
     api.dossier().then(d => {
@@ -26,6 +27,8 @@ export default function Personale() {
       setShowInAlbo(d.showInAlbo !== false)
     }).catch(() => {})
     api.telegramStatus().then(d => setTgLinked(d.linked)).catch(() => {})
+    fetch('/api/subscriptions/me', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+      .then(r => r.json()).then(d => setSubscription(d.subscription)).catch(() => setSubscription(null))
   }, [])
 
   const handleTelegramLink = async () => {
@@ -139,6 +142,45 @@ export default function Personale() {
           </div>
         </div>
       </div>
+
+      {/* Card abbonamento */}
+      {subscription !== undefined && (
+        <div className="card" style={{ padding: 16, marginBottom: 20, background: subscription?.status === 'ACTIVE' && subscription.daysLeft > 7 ? 'rgba(180,255,57,.03)' : subscription?.status === 'ACTIVE' ? 'rgba(232,200,74,.04)' : 'rgba(255,71,87,.04)', border: `1px solid ${subscription?.status === 'ACTIVE' && subscription.daysLeft > 7 ? 'rgba(180,255,57,.18)' : subscription?.status === 'ACTIVE' ? 'rgba(232,200,74,.25)' : 'rgba(255,71,87,.25)'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '.1em', fontWeight: 700, color: 'var(--muted)' }}>💳 Abbonamento</div>
+            {subscription ? (
+              <div style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: subscription.status === 'ACTIVE' && subscription.daysLeft > 7 ? 'rgba(180,255,57,.1)' : subscription.status === 'ACTIVE' ? 'rgba(232,200,74,.1)' : 'rgba(255,71,87,.1)', color: subscription.status === 'ACTIVE' && subscription.daysLeft > 7 ? 'var(--lime)' : subscription.status === 'ACTIVE' ? '#E8C84A' : 'var(--red)' }}>
+                {subscription.status === 'ACTIVE' ? (subscription.daysLeft <= 7 ? '⚠️ In scadenza' : '✅ Attivo') : subscription.status === 'SUSPENDED' ? '⏸ Sospeso' : '🔴 Scaduto'}
+              </div>
+            ) : (
+              <div style={{ fontSize: 11, color: 'var(--muted)' }}>Nessun abbonamento</div>
+            )}
+          </div>
+          {subscription ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 2 }}>Scadenza</div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{new Date(subscription.endDate).toLocaleDateString('it-IT')}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 2 }}>Giorni rimasti</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: subscription.daysLeft <= 7 ? '#E8C84A' : subscription.daysLeft <= 0 ? 'var(--red)' : 'var(--lime)' }}>{Math.max(0, subscription.daysLeft)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 2 }}>Importo</div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>€{Number(subscription.amount).toFixed(2)}/mese</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 13, color: 'var(--muted)' }}>Contatta il Comando per attivare il tuo abbonamento.</div>
+          )}
+          {subscription?.daysLeft <= 7 && subscription?.daysLeft > 0 && (
+            <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(232,200,74,.08)', borderRadius: 8, fontSize: 12, color: '#E8C84A' }}>
+              ⚠️ Il tuo abbonamento scade tra {subscription.daysLeft} {subscription.daysLeft === 1 ? 'giorno' : 'giorni'}. Contatta il Comando.
+            </div>
+          )}
+        </div>
+      )}
 
       <Section title="Servizio">
         <SectionItem to="/fascicolo" icon="📂" label="Fascicolo Personale" />

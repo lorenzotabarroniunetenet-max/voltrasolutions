@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api.js'
 import KpiCard from '../components/KpiCard.jsx'
 import RuleBadge from '../components/RuleBadge.jsx'
@@ -7,8 +7,10 @@ import GrowthChart from '../components/GrowthChart.jsx'
 import DailyCalendar from '../components/DailyCalendar.jsx'
 import DailyStreak from '../components/DailyStreak.jsx'
 import TiroDelComando from '../components/TiroDelComando.jsx'
+import TourOverlay from '../components/TourOverlay.jsx'
 
 export default function Dashboard() {
+  const nav = useNavigate()
   const [accounts, setAccounts] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [stats, setStats] = useState(null)
@@ -16,6 +18,13 @@ export default function Dashboard() {
   const [latestBriefing, setLatestBriefing] = useState(null)
   const [securityStatus, setSecurityStatus] = useState(null)
   const [nudgeHidden, setNudgeHidden] = useState(false)
+
+  // Mobile o PWA standalone → redirect a /app con design premium
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768
+    const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
+    if (isMobile || isStandalone) nav('/app', { replace: true })
+  }, [])
 
   useEffect(() => {
     api.myAccounts().then(accs => {
@@ -74,6 +83,7 @@ export default function Dashboard() {
 
   return (
     <div>
+      <TourOverlay />
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
@@ -136,10 +146,12 @@ export default function Dashboard() {
       )}
 
       {/* Missione in corso */}
-      <MissioneInCorso account={account} program={program} />
+      <div id="tour-mission">
+        <MissioneInCorso account={account} program={program} />
+      </div>
 
       {/* Dotazione semplificata */}
-      <div className="card" style={{ marginBottom: 24, padding: 16 }}>
+      <div id="tour-kpi" className="card" style={{ marginBottom: 24, padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, fontSize: 13 }}>
           <div><span style={{ color: 'var(--muted)' }}>Grado: </span><strong>{program.name}</strong></div>
           <div><span style={{ color: 'var(--muted)' }}>Dotazione: </span><strong>${startBalance.toLocaleString()}</strong></div>
@@ -149,7 +161,7 @@ export default function Dashboard() {
       </div>
 
       {/* Streak + Tiro del Comando */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <div id="tour-streak" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
         <DailyStreak />
         <TiroDelComando />
       </div>

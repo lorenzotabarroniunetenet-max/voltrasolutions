@@ -113,18 +113,18 @@ export default function Layout({ children }) {
     { to: '/buy', label: 'Promozione di Grado', icon: 'promo' },
     { to: '/payout', label: 'Rimborso Missione', icon: 'payout' },
     { to: '/contact', label: 'Linea Diretta HQ', icon: 'line' },
+    { to: '/guida', label: 'Guida Operativa', icon: 'briefing' },
     { to: '/personale', label: 'Personale', icon: 'more' },
   ]
   const adminLinks = [{ to: '/admin', label: 'Stato Maggiore', icon: 'admin' }]
   const links = user?.role === 'ADMIN' ? [...traderLinks, ...adminLinks] : traderLinks
 
-  // Bottom nav mobile: 5 voci principali
+  // Bottom nav mobile: 4 voci
   const bottomNav = [
     { to: '/dashboard', label: 'Quartier', icon: 'hq' },
-    { to: '/app',       label: 'App', icon: null },
+    { to: '/app',       label: 'App',      icon: null },
     { to: '/buy',       label: 'Missione', icon: 'promo' },
-    { to: '/fascicolo', label: 'Fascicolo', icon: 'dossier' },
-    { to: '/personale', label: 'Altro', icon: 'more' },
+    { to: '/personale', label: 'Altro',    icon: 'more' },
   ]
 
   const handleLogout = () => { logout(); nav('/login') }
@@ -157,11 +157,14 @@ export default function Layout({ children }) {
           App mobile
         </Link>
         <nav style={{ flex: 1 }}>
-          {links.map(l => (
-            <Link key={l.to} to={l.to} className={`sidebar-link ${loc.pathname === l.to ? 'active' : ''}`}>
-              {Icons[l.icon](18)}<span>{l.label}</span>
-            </Link>
-          ))}
+          {links.map(l => {
+            const tourId = l.to === '/buy' ? 'tour-buy' : l.to === '/briefing' ? 'tour-briefing' : l.to === '/contact' ? 'tour-linea' : undefined
+            return (
+              <Link key={l.to} to={l.to} id={tourId} className={`sidebar-link ${loc.pathname === l.to ? 'active' : ''}`}>
+                {Icons[l.icon](18)}<span>{l.label}</span>
+              </Link>
+            )
+          })}
         </nav>
         <div style={{ paddingTop: 16, borderTop: '1px solid var(--border)' }}>
           <div style={{ padding: '0 12px 12px', fontSize: 13 }}>
