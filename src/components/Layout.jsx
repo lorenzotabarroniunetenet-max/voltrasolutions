@@ -253,7 +253,7 @@ export default function Layout({ children }) {
           if (!showBack) return null
           return (
             <button
-              onClick={() => nav(-1)}
+              onClick={() => window.history.length > 1 ? nav(-1) : nav('/dashboard')}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
