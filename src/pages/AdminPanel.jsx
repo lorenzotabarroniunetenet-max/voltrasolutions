@@ -23,7 +23,15 @@ class ErrorBoundary extends Component {
 }
 
 export default function AdminPanel() {
-  const [tab, setTab] = useState('overview')
+  const [tab, setTab] = useState(() => {
+    const p = new URLSearchParams(window.location.search).get('tab')
+    return p || 'overview'
+  })
+
+  useEffect(() => {
+    window.__voltraSetAdminTab = setTab
+    return () => { delete window.__voltraSetAdminTab }
+  }, [])
   const [userDetailId, setUserDetailId] = useState(null)
 
   const tabs = [

@@ -161,26 +161,28 @@ export default function Layout({ children }) {
           <nav style={{ flex: 1, overflowY: 'auto' }}>
             {[
               { section: 'Operazioni' },
-              { to: '/admin', label: 'Quadro Generale', icon: 'hq' },
-              { to: '/admin?tab=orders', label: 'Promozioni', icon: 'promo' },
-              { to: '/admin?tab=payouts', label: 'Rimborsi', icon: 'payout' },
-              { to: '/admin?tab=missions', label: 'Missioni', icon: 'codice' },
-              { to: '/admin?tab=tickets', label: 'Supporto', icon: 'line' },
+              { to: '/admin', label: 'Quadro Generale', icon: 'hq', tab: 'overview' },
+              { to: '/admin', label: 'Promozioni', icon: 'promo', tab: 'orders' },
+              { to: '/admin', label: 'Rimborsi', icon: 'payout', tab: 'payouts' },
+              { to: '/admin', label: 'Missioni', icon: 'codice', tab: 'accounts' },
+              { to: '/admin', label: 'Supporto', icon: 'line', tab: 'tickets' },
               { section: 'Membri' },
-              { to: '/admin?tab=users', label: 'Membri', icon: 'more' },
-              { to: '/admin?tab=subscriptions', label: 'Abbonamenti', icon: 'payout' },
+              { to: '/admin', label: 'Membri', icon: 'more', tab: 'users' },
+              { to: '/admin', label: 'Abbonamenti', icon: 'payout', tab: 'subscriptions' },
               { section: 'Contenuti' },
-              { to: '/admin?tab=briefings', label: 'Ordini del Giorno', icon: 'briefing' },
-              { to: '/admin?tab=documents', label: 'Documenti', icon: 'docs' },
+              { to: '/admin', label: 'Ordini del Giorno', icon: 'briefing', tab: 'briefings' },
+              { to: '/admin', label: 'Documenti', icon: 'docs', tab: 'documents' },
               { section: 'Sistema' },
-              { to: '/admin?tab=settings', label: 'Impostazioni', icon: 'admin' },
-              { to: '/admin?tab=audit', label: 'Audit Log', icon: 'dossier' },
+              { to: '/admin', label: 'Impostazioni', icon: 'admin', tab: 'settings' },
+              { to: '/admin', label: 'Audit Log', icon: 'dossier', tab: 'audit' },
             ].map((item, i) => {
               if (item.section) return (
                 <div key={i} style={{ padding: '10px 14px 4px', fontSize: 8, color: 'rgba(255,255,255,.2)', textTransform: 'uppercase', letterSpacing: '.14em', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace' }}>{item.section}</div>
               )
               return (
-                <Link key={item.to} to={item.to} className={`sidebar-link ${loc.pathname === '/admin' && item.to === '/admin' && !item.to.includes('?') ? 'active' : ''}`}>
+                <Link key={item.tab} to={`/admin?tab=${item.tab}`}
+                  onClick={() => window.__voltraSetAdminTab?.(item.tab)}
+                  className={`sidebar-link ${loc.pathname === '/admin' && new URLSearchParams(loc.search).get('tab') === item.tab ? 'active' : loc.pathname === '/admin' && !loc.search && item.tab === 'overview' ? 'active' : ''}`}>
                   {Icons[item.icon]?.(18)}<span>{item.label}</span>
                 </Link>
               )
