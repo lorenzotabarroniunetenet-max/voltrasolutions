@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import OathOverlay from '../components/OathOverlay.jsx'
 
 const STATUS = {
   ACTIVE:   { color: '#B4FF39', rgb: '180,255,57', icon: '⚔️', label: 'Missione in corso', title: 'Al fronte', pulse: true },
@@ -33,6 +34,8 @@ export default function AppMobile() {
   return (
     <div style={{ minHeight:'100vh', background:'#030303', display:'flex', flexDirection:'column',
       paddingTop:'env(safe-area-inset-top,0px)', paddingBottom:'env(safe-area-inset-bottom,24px)', position:'relative', overflow:'hidden' }}>
+
+      <OathOverlay user={user} />
 
       {/* scanlines */}
       <div style={{ position:'fixed', inset:0, backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px)', pointerEvents:'none', zIndex:0 }}/>
