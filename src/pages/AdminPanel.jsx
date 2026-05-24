@@ -24,13 +24,8 @@ class ErrorBoundary extends Component {
 
 export default function AdminPanel() {
   const [searchParams] = useSearchParams()
+  const nav = useNavigate()
   const tab = searchParams.get('tab') || 'overview'
-  const setTab = (t) => { window.history.pushState({}, '', `/admin?tab=${t}`) }
-
-  useEffect(() => {
-    window.__voltraSetAdminTab = (t) => window.history.pushState({}, '', `/admin?tab=${t}`)
-    return () => { delete window.__voltraSetAdminTab }
-  }, [])
   const [userDetailId, setUserDetailId] = useState(null)
 
   const tabs = [
@@ -58,7 +53,7 @@ export default function AdminPanel() {
           <div style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 24 }}>Comando operativo</div>
           <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
             {tabs.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
+              <button key={t.id} onClick={() => nav(`/admin?tab=${t.id}`)} style={{
                 background: 'transparent', border: 'none',
                 color: tab === t.id ? 'var(--lime)' : 'var(--muted)',
                 padding: '12px 20px', cursor: 'pointer', fontSize: 14, fontWeight: tab === t.id ? 600 : 400,
