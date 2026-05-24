@@ -650,7 +650,7 @@ function UserDetail({ userId, back }) {
   const [userSub, setUserSub] = useState(undefined)
 
   const BASE = import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('voltra_token')
   const authH = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
   const reload = async () => {
@@ -2012,7 +2012,7 @@ function SubscriptionsTab() {
   const [form, setForm] = useState({ userId: '', months: 1, amount: 99, notes: '' })
   const [msg, setMsg] = useState(null)
 
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('voltra_token')
   const BASE = import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
