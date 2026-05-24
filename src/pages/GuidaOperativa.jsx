@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { resetTour } from '../components/TourOverlay.jsx'
+import { resetOath } from '../components/OathOverlay.jsx'
 import { useNavigate } from 'react-router-dom'
 
 const SECTIONS = [
@@ -167,13 +168,13 @@ export default function GuidaOperativa() {
       </div>
 
       {/* Reset tour button */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 12 }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>Rivisita il tour guidato</div>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>Riparte il tour interattivo dal Quartier Generale</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>Rivedi il Giuramento</div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>Riparte la cerimonia di giuramento</div>
         </div>
-        <button onClick={handleResetTour} style={{ background: 'transparent', border: '1px solid var(--border-bright)', color: 'var(--lime)', padding: '9px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif', whiteSpace: 'nowrap' }}>
-          ▶ Rivedi tour
+        <button onClick={() => { resetOath(); nav('/dashboard') }} style={{ background: 'transparent', border: '1px solid var(--border-bright)', color: 'var(--lime)', padding: '9px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif', whiteSpace: 'nowrap' }}>
+          ▶ Rivedi
         </button>
       </div>
     </div>
