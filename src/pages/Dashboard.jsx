@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api.js'
+import { useAuth } from '../context/AuthContext.jsx'
 import KpiCard from '../components/KpiCard.jsx'
 import RuleBadge from '../components/RuleBadge.jsx'
 import GrowthChart from '../components/GrowthChart.jsx'
@@ -12,6 +13,7 @@ import OathOverlay from '../components/OathOverlay.jsx'
 
 export default function Dashboard() {
   const nav = useNavigate()
+  const { user } = useAuth()
   const [accounts, setAccounts] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [stats, setStats] = useState(null)
