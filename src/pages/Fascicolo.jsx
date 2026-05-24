@@ -23,7 +23,7 @@ export default function Fascicolo() {
   if (loading) return <div style={{ color: 'var(--muted)', padding: 20 }}>Caricamento Fascicolo...</div>
   if (!data) return <div style={{ color: 'var(--red)', padding: 20 }}>Errore caricamento</div>
 
-  const { name, email, matricola, rank, lore, enlistedAt, daysOfService, decorations, serviceLog } = data
+  const { name, email, matricola, rank, lore, enlistedAt, daysOfService, decorations, serviceLog, memberNumber } = data
   const accentColor = lore?.color || '#B4FF39'
 
   return (
@@ -57,7 +57,13 @@ export default function Fascicolo() {
           </div>
         </div>
 
-        <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          {memberNumber && (
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 4 }}>Membro</div>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 15, color: accentColor, fontWeight: 700 }}>#{String(memberNumber).padStart(3, '0')}</div>
+            </div>
+          )}
           <div>
             <div style={{ fontSize: 9, color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 4 }}>Matricola</div>
             <div className="mono" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: '#fff' }}>{matricola}</div>
