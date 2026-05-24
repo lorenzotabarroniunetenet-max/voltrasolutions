@@ -36,9 +36,12 @@ export default function Layout({ children }) {
   const nav = useNavigate()
   const loc = useLocation()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [bellOpen, setBellOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [openAccordions, setOpenAccordions] = useState({})
+  const toggleAccordion = (key) => setOpenAccordions(p => ({ ...p, [key]: !p[key] }))
   const [showBoot, setShowBoot] = useState(() => {
     try { return !sessionStorage.getItem('voltra_boot_done') } catch { return false }
   })
@@ -100,21 +103,24 @@ export default function Layout({ children }) {
   }
 
   const traderLinks = [
-    { to: '/dashboard', label: 'Quartier Generale', icon: 'hq' },
-    { to: '/briefing', label: 'Sala Briefing', icon: 'briefing' },
-    { to: '/calendario', label: 'Calendario', icon: 'calendar' },
-    { to: '/fascicolo', label: 'Fascicolo', icon: 'dossier' },
-    { to: '/requisiti', label: 'Requisiti', icon: 'requirements' },
-    { to: '/albo', label: 'Albo d\'Onore', icon: 'albo' },
-    { to: '/mappa', label: 'Mappa Operazioni', icon: 'map' },
-    { to: '/documenti', label: 'Documenti', icon: 'docs' },
-    { to: '/codice-condotta', label: 'Codice di Condotta', icon: 'codice' },
-    { to: '/codice-operativo', label: 'Codice Operativo', icon: 'glossary' },
-    { to: '/buy', label: 'Promozione di Grado', icon: 'promo' },
-    { to: '/payout', label: 'Rimborso Missione', icon: 'payout' },
-    { to: '/contact', label: 'Linea Diretta HQ', icon: 'line' },
-    { to: '/guida', label: 'Guida Operativa', icon: 'briefing' },
-    { to: '/personale', label: 'Personale', icon: 'more' },
+    { section: 'Operativo' },
+    { to: '/dashboard',       label: 'Quartier Generale',    icon: 'hq' },
+    { to: '/briefing',        label: 'Sala Briefing',         icon: 'briefing' },
+    { to: '/calendario',      label: 'Calendario',            icon: 'calendar' },
+    { section: 'Missioni' },
+    { to: '/buy',             label: 'Promozione di Grado',   icon: 'promo' },
+    { to: '/payout',          label: 'Rimborso Missione',     icon: 'payout' },
+    { section: 'Riferimento' },
+    { to: '/requisiti',       label: 'Requisiti',             icon: 'requirements' },
+    { to: '/mappa',           label: 'Mappa Operazioni',      icon: 'map' },
+    { to: '/albo',            label: 'Albo d\'Onore',         icon: 'albo' },
+    { to: '/documenti',       label: 'Documenti',             icon: 'docs' },
+    { to: '/codice-condotta', label: 'Codice di Condotta',    icon: 'codice' },
+    { to: '/codice-operativo',label: 'Codice Operativo',      icon: 'glossary' },
+    { section: 'Account' },
+    { to: '/personale',       label: 'Personale',             icon: 'more' },
+    { to: '/contact',         label: 'Linea Diretta HQ',      icon: 'line' },
+    { to: '/guida',           label: 'Guida Operativa',       icon: 'briefing' },
   ]
   const adminLinks = [{ to: '/admin', label: 'Stato Maggiore', icon: 'admin' }]
   const links = user?.role === 'ADMIN' ? [...traderLinks, ...adminLinks] : traderLinks
@@ -129,11 +135,75 @@ export default function Layout({ children }) {
 
   const handleLogout = () => { logout(); nav('/login') }
 
-  useEffect(() => { setDrawerOpen(false) }, [loc.pathname])
+  useEffect(() => { setDrawerOpen(false); setSheetOpen(false) }, [loc.pathname])
   useEffect(() => {
-    document.body.style.overflow = drawerOpen ? 'hidden' : ''
+    document.body.style.overflow = (drawerOpen || sheetOpen) ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
-  }, [drawerOpen])
+  }, [drawerOpen, sheetOpen])
+
+  // Accordion section groups per membro
+  const accGroups = {
+    Missioni: [
+      { to: '/buy',   label: 'Promozione di Grado', icon: 'promo' },
+      { to: '/payout',label: 'Rimborso Missione',   icon: 'payout' },
+    ],
+    Riferimento: [
+      { to: '/fascicolo',      label: 'Fascicolo',          icon: 'dossier' },
+      { to: '/requisiti',      label: 'Requisiti',           icon: 'requirements' },
+      { to: '/mappa',          label: 'Mappa Operazioni',    icon: 'map' },
+      { to: '/albo',           label: 'Albo d\'Onore',       icon: 'albo' },
+      { to: '/documenti',      label: 'Documenti',           icon: 'docs' },
+      { to: '/codice-condotta',label: 'Codice di Condotta',  icon: 'codice' },
+      { to: '/codice-operativo',label: 'Codice Operativo',   icon: 'glossary' },
+    ],
+    Account: [
+      { to: '/personale', label: 'Personale',        icon: 'more' },
+      { to: '/contact',   label: 'Linea Diretta HQ', icon: 'line' },
+      { to: '/guida',     label: 'Guida Operativa',  icon: 'briefing' },
+    ],
+  }
+
+  const AccItem = ({ l, indent = false, onClick }) => (
+    <Link
+      to={l.to}
+      onClick={onClick}
+      className={`sidebar-link ${loc.pathname === l.to ? 'active' : ''}`}
+      style={indent ? { paddingLeft: 28, fontSize: 12 } : {}}
+    >
+      {Icons[l.icon](16)}<span>{l.label}</span>
+    </Link>
+  )
+
+  const AccGroup = ({ name, links, indent = false, onClick }) => {
+    const isOpen = openAccordions[name]
+    const hasActive = links.some(l => loc.pathname === l.to)
+    const ChevronIcon = () => (
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+        style={{ transition: 'transform .2s', transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', opacity: .4, flexShrink: 0 }}>
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    )
+    return (
+      <>
+        <div
+          onClick={() => toggleAccordion(name)}
+          className={`sidebar-link ${hasActive ? 'active' : ''}`}
+          style={{ cursor: 'pointer', justifyContent: 'space-between', opacity: isOpen ? 1 : undefined }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {name === 'Missioni' && Icons.promo(16)}
+            {name === 'Riferimento' && Icons.docs(16)}
+            {name === 'Account' && Icons.more(16)}
+            {name}
+          </span>
+          <ChevronIcon />
+        </div>
+        <div style={{ overflow: 'hidden', maxHeight: isOpen ? links.length * 42 + 'px' : 0, transition: 'max-height .22s cubic-bezier(.4,0,.2,1)' }}>
+          {links.map(l => <AccItem key={l.to} l={l} indent onClick={onClick} />)}
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -196,19 +266,19 @@ export default function Layout({ children }) {
         ) : (
           /* ── SIDEBAR MEMBRO ── */
           <>
-            <Link to="/app" style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 12px', marginBottom:12, background:'rgba(180,255,57,.04)', border:'1px solid rgba(180,255,57,.15)', borderRadius:8, textDecoration:'none', color:'var(--lime)', fontSize:11, fontWeight:700 }}>
+            <Link to="/app" style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 12px', marginBottom:8, background:'rgba(180,255,57,.04)', border:'1px solid rgba(180,255,57,.15)', borderRadius:8, textDecoration:'none', color:'var(--lime)', fontSize:11, fontWeight:700 }}>
               <svg width="12" height="12" viewBox="0 0 100 100"><polygon points="58,0 20,55 46,55 34,100 80,40 52,40 68,0" fill="#B4FF39"/></svg>
               App mobile
             </Link>
             <nav style={{ flex: 1 }}>
-              {links.map(l => {
-                const tourId = l.to === '/buy' ? 'tour-buy' : l.to === '/briefing' ? 'tour-briefing' : l.to === '/contact' ? 'tour-linea' : undefined
-                return (
-                  <Link key={l.to} to={l.to} id={tourId} className={`sidebar-link ${loc.pathname === l.to ? 'active' : ''}`}>
-                    {Icons[l.icon](18)}<span>{l.label}</span>
-                  </Link>
-                )
-              })}
+              {/* Diretti */}
+              <Link to="/dashboard" id="tour-hq" className={`sidebar-link ${loc.pathname === '/dashboard' ? 'active' : ''}`}>{Icons.hq(18)}<span>Quartier Generale</span></Link>
+              <Link to="/briefing" id="tour-briefing" className={`sidebar-link ${loc.pathname === '/briefing' ? 'active' : ''}`}>{Icons.briefing(18)}<span>Sala Briefing</span></Link>
+              <Link to="/calendario" className={`sidebar-link ${loc.pathname === '/calendario' ? 'active' : ''}`}>{Icons.calendar(18)}<span>Calendario</span></Link>
+              {/* Accordion */}
+              {Object.entries(accGroups).map(([name, links]) => (
+                <AccGroup key={name} name={name} links={links} />
+              ))}
             </nav>
           </>
         )}
@@ -331,19 +401,51 @@ export default function Layout({ children }) {
 
       {/* BOTTOM NAV MOBILE */}
       <nav className="bottom-nav">
-        {bottomNav.map(l => {
-          const active = loc.pathname === l.to
-          return (
-            <Link key={l.to} to={l.to} className={`bottom-nav-item ${active ? 'active' : ''}`}>
-              {l.icon === null
-                ? <svg width="20" height="20" viewBox="0 0 100 100"><polygon points="58,0 20,55 46,55 34,100 80,40 52,40 68,0" fill={active ? '#B4FF39' : 'currentColor'}/></svg>
-                : Icons[l.icon](20)
-              }
-              <span>{l.label}</span>
-            </Link>
-          )
-        })}
+        <Link to="/dashboard" className={`bottom-nav-item ${loc.pathname === '/dashboard' ? 'active' : ''}`}>
+          {Icons.hq(20)}<span>Home</span>
+        </Link>
+        <Link to="/briefing" className={`bottom-nav-item ${loc.pathname === '/briefing' ? 'active' : ''}`}>
+          {Icons.briefing(20)}<span>Briefing</span>
+        </Link>
+        <Link to="/buy" className={`bottom-nav-item ${loc.pathname === '/buy' ? 'active' : ''}`}>
+          {Icons.promo(20)}<span>Missione</span>
+        </Link>
+        <button onClick={() => setSheetOpen(true)} className={`bottom-nav-item ${sheetOpen ? 'active' : ''}`} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', font: 'inherit' }}>
+          {Icons.more(20)}<span>Altro</span>
+        </button>
       </nav>
+
+      {/* BOTTOM SHEET MOBILE */}
+      {sheetOpen && (
+        <>
+          <div onClick={() => setSheetOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 499, backdropFilter: 'blur(4px)' }} />
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '18px 18px 0 0', zIndex: 500, padding: '10px 0 40px', maxHeight: '80vh', overflowY: 'auto' }}>
+            <div style={{ width: 36, height: 3, background: 'rgba(255,255,255,.12)', borderRadius: 2, margin: '0 auto 16px' }} />
+            <div style={{ padding: '0 10px' }}>
+              {/* Azioni rapide in cima */}
+              {[
+                { to: '/buy',      label: 'Promozione di Grado', icon: 'promo',   desc: 'Scala al prossimo livello' },
+                { to: '/payout',   label: 'Rimborso Missione',   icon: 'payout',  desc: 'Richiedi liquidazione' },
+              ].map(l => (
+                <Link key={l.to} to={l.to} onClick={() => setSheetOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 10px', borderRadius: 10, textDecoration: 'none', color: 'var(--lime)', marginBottom: 2 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(180,255,57,.08)', border: '1px solid rgba(180,255,57,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {Icons[l.icon](16)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{l.label}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(180,255,57,.4)', marginTop: 1 }}>{l.desc}</div>
+                  </div>
+                </Link>
+              ))}
+              <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
+              {/* Accordion Riferimento */}
+              {Object.entries(accGroups).filter(([n]) => n !== 'Missioni').map(([name, links]) => (
+                <AccGroup key={name} name={name} links={links} onClick={() => setSheetOpen(false)} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       <AppDownloadBtn />
       </div>
