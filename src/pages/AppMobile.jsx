@@ -153,9 +153,9 @@ export default function AppMobile() {
           ))}
         </div>
 
-        <Link to="/dashboard" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', border:'1px solid rgba(255,255,255,.05)', borderRadius:10, textDecoration:'none', color:'rgba(255,255,255,.2)', fontSize:11 }}>
+        <a href="/dashboard?force=1" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', border:'1px solid rgba(255,255,255,.05)', borderRadius:10, textDecoration:'none', color:'rgba(255,255,255,.2)', fontSize:11 }}>
           🖥 Apri il sito completo
-        </Link>
+        </a>
 
       </div>
 

@@ -24,6 +24,8 @@ export default function Dashboard() {
 
   // Mobile o PWA standalone → redirect a /app con design premium
   useEffect(() => {
+    const force = new URLSearchParams(window.location.search).get('force')
+    if (force) return
     const isMobile = window.innerWidth < 768
     const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
     if (isMobile || isStandalone) nav('/app', { replace: true })
