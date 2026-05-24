@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { resetTour } from '../components/TourOverlay.jsx'
-import { resetOath } from '../components/OathOverlay.jsx'
 import { useNavigate } from 'react-router-dom'
 
 const SECTIONS = [
@@ -173,7 +172,12 @@ export default function GuidaOperativa() {
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>Rivedi il Giuramento</div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>Riparte la cerimonia di giuramento</div>
         </div>
-        <button onClick={() => { resetOath(); nav('/dashboard') }} style={{ background: 'transparent', border: '1px solid var(--border-bright)', color: 'var(--lime)', padding: '9px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif', whiteSpace: 'nowrap' }}>
+        <button onClick={async () => {
+          await fetch(`${import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'}/api/membri/oath`, {
+            method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('voltra_token')}` }
+          }).catch(() => {})
+          nav('/dashboard')
+        }} style={{ background: 'transparent', border: '1px solid var(--border-bright)', color: 'var(--lime)', padding: '9px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif', whiteSpace: 'nowrap' }}>
           ▶ Rivedi
         </button>
       </div>

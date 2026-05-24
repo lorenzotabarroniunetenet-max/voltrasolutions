@@ -148,24 +148,64 @@ export default function Layout({ children }) {
       <div className="app-shell" style={{ paddingBottom: 32 }}>
       {/* SIDEBAR DESKTOP */}
       <aside className="sidebar sidebar-desktop">
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '0 12px', textDecoration: 'none', color: 'inherit' }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, padding: '0 12px', textDecoration: 'none', color: 'inherit' }}>
           <span onClick={onBoltClick} title="Comunicazione cifrata" className={unreadCount > 0 ? 'voltra-bolt-pulse' : ''} style={{ fontSize: 26, color: 'var(--lime)', cursor: 'pointer', userSelect: 'none' }}>⚡</span>
-          <span className="display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.02em' }}>VOLTRA</span>
+          <div>
+            <span className="display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.02em' }}>VOLTRA</span>
+            {user?.role === 'ADMIN' && <div style={{ fontSize: 9, color: 'rgba(180,255,57,.5)', fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase', letterSpacing: '.1em', marginTop: 1 }}>Comando</div>}
+          </div>
         </Link>
-        <Link to="/app" style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 12px', marginBottom:20, background:'rgba(180,255,57,.04)', border:'1px solid rgba(180,255,57,.15)', borderRadius:8, textDecoration:'none', color:'var(--lime)', fontSize:11, fontWeight:700 }}>
-          <svg width="12" height="12" viewBox="0 0 100 100"><polygon points="58,0 20,55 46,55 34,100 80,40 52,40 68,0" fill="#B4FF39"/></svg>
-          App mobile
-        </Link>
-        <nav style={{ flex: 1 }}>
-          {links.map(l => {
-            const tourId = l.to === '/buy' ? 'tour-buy' : l.to === '/briefing' ? 'tour-briefing' : l.to === '/contact' ? 'tour-linea' : undefined
-            return (
-              <Link key={l.to} to={l.to} id={tourId} className={`sidebar-link ${loc.pathname === l.to ? 'active' : ''}`}>
-                {Icons[l.icon](18)}<span>{l.label}</span>
-              </Link>
-            )
-          })}
-        </nav>
+
+        {user?.role === 'ADMIN' ? (
+          /* ── SIDEBAR ADMIN ── */
+          <nav style={{ flex: 1, overflowY: 'auto' }}>
+            {[
+              { section: 'Operazioni' },
+              { to: '/admin', label: 'Quadro Generale', icon: 'hq' },
+              { to: '/admin?tab=orders', label: 'Promozioni', icon: 'promo' },
+              { to: '/admin?tab=payouts', label: 'Rimborsi', icon: 'payout' },
+              { to: '/admin?tab=missions', label: 'Missioni', icon: 'codice' },
+              { to: '/admin?tab=tickets', label: 'Supporto', icon: 'line' },
+              { section: 'Membri' },
+              { to: '/admin?tab=users', label: 'Membri', icon: 'more' },
+              { to: '/admin?tab=subscriptions', label: 'Abbonamenti', icon: 'payout' },
+              { section: 'Contenuti' },
+              { to: '/admin?tab=briefings', label: 'Ordini del Giorno', icon: 'briefing' },
+              { to: '/admin?tab=documents', label: 'Documenti', icon: 'docs' },
+              { section: 'Sistema' },
+              { to: '/admin?tab=settings', label: 'Impostazioni', icon: 'admin' },
+              { to: '/admin?tab=audit', label: 'Audit Log', icon: 'dossier' },
+            ].map((item, i) => {
+              if (item.section) return (
+                <div key={i} style={{ padding: '10px 14px 4px', fontSize: 8, color: 'rgba(255,255,255,.2)', textTransform: 'uppercase', letterSpacing: '.14em', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace' }}>{item.section}</div>
+              )
+              return (
+                <Link key={item.to} to={item.to} className={`sidebar-link ${loc.pathname === '/admin' && item.to === '/admin' && !item.to.includes('?') ? 'active' : ''}`}>
+                  {Icons[item.icon]?.(18)}<span>{item.label}</span>
+                </Link>
+              )
+            })}
+          </nav>
+        ) : (
+          /* ── SIDEBAR MEMBRO ── */
+          <>
+            <Link to="/app" style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 12px', marginBottom:12, background:'rgba(180,255,57,.04)', border:'1px solid rgba(180,255,57,.15)', borderRadius:8, textDecoration:'none', color:'var(--lime)', fontSize:11, fontWeight:700 }}>
+              <svg width="12" height="12" viewBox="0 0 100 100"><polygon points="58,0 20,55 46,55 34,100 80,40 52,40 68,0" fill="#B4FF39"/></svg>
+              App mobile
+            </Link>
+            <nav style={{ flex: 1 }}>
+              {links.map(l => {
+                const tourId = l.to === '/buy' ? 'tour-buy' : l.to === '/briefing' ? 'tour-briefing' : l.to === '/contact' ? 'tour-linea' : undefined
+                return (
+                  <Link key={l.to} to={l.to} id={tourId} className={`sidebar-link ${loc.pathname === l.to ? 'active' : ''}`}>
+                    {Icons[l.icon](18)}<span>{l.label}</span>
+                  </Link>
+                )
+              })}
+            </nav>
+          </>
+        )}
+
         <div style={{ paddingTop: 16, borderTop: '1px solid var(--border)' }}>
           <div style={{ padding: '0 12px 12px', fontSize: 13 }}>
             <div style={{ color: 'var(--text)', fontWeight: 500 }}>{user?.name}</div>

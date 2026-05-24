@@ -802,6 +802,27 @@ function UserDetail({ userId, back }) {
         )}
       </div>
 
+      {/* Giuramento */}
+      <div className="card" style={{ marginBottom: 20, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>⚔️ Giuramento</div>
+          <div style={{ fontSize: 12, color: user?.oathDone ? 'var(--lime)' : 'var(--red)' }}>
+            {user?.oathDone ? '✅ Prestato' : '❌ Non ancora prestato'}
+          </div>
+        </div>
+        <button
+          onClick={async () => {
+            await fetch(`${import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'}/api/admin/users/${userId}/oath`, {
+              method: 'PATCH', headers: authH, body: JSON.stringify({ oathDone: !user?.oathDone })
+            })
+            reload()
+          }}
+          style={{ background: 'transparent', border: '1px solid var(--border)', color: user?.oathDone ? 'var(--red)' : 'var(--lime)', padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif', whiteSpace: 'nowrap' }}
+        >
+          {user?.oathDone ? '↩ Reset' : '⚡ Forza'}
+        </button>
+      </div>
+
       {/* Abbonamento */}
       <div className="card" style={{ marginBottom: 20, padding: 24, background: userSub?.status === 'ACTIVE' ? 'rgba(180,255,57,.02)' : userSub ? 'rgba(255,71,87,.02)' : undefined, border: userSub?.status === 'ACTIVE' ? '1px solid rgba(180,255,57,.15)' : userSub ? '1px solid rgba(255,71,87,.15)' : undefined }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
