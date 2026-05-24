@@ -1,5 +1,5 @@
 import { useEffect, useState, Component } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../lib/api.js'
 
 class ErrorBoundary extends Component {
@@ -23,13 +23,12 @@ class ErrorBoundary extends Component {
 }
 
 export default function AdminPanel() {
-  const [tab, setTab] = useState(() => {
-    const p = new URLSearchParams(window.location.search).get('tab')
-    return p || 'overview'
-  })
+  const [searchParams] = useSearchParams()
+  const tab = searchParams.get('tab') || 'overview'
+  const setTab = (t) => { window.history.pushState({}, '', `/admin?tab=${t}`) }
 
   useEffect(() => {
-    window.__voltraSetAdminTab = setTab
+    window.__voltraSetAdminTab = (t) => window.history.pushState({}, '', `/admin?tab=${t}`)
     return () => { delete window.__voltraSetAdminTab }
   }, [])
   const [userDetailId, setUserDetailId] = useState(null)
