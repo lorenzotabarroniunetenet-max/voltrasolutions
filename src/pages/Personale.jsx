@@ -27,7 +27,7 @@ export default function Personale() {
       setShowInAlbo(d.showInAlbo !== false)
     }).catch(() => {})
     api.telegramStatus().then(d => setTgLinked(d.linked)).catch(() => {})
-    fetch('/api/subscriptions/me', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+    fetch(`${import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'}/api/subscriptions/me`, { headers: { Authorization: `Bearer ${localStorage.getItem('voltra_token')}` } })
       .then(r => r.json()).then(d => setSubscription(d.subscription)).catch(() => setSubscription(null))
   }, [])
 
