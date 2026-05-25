@@ -23,6 +23,7 @@ import Calendario from './pages/Calendario.jsx'
 import MappaOperazioni from './pages/MappaOperazioni.jsx'
 import SalaFondatori from './pages/SalaFondatori.jsx'
 import Contact from './pages/Contact.jsx'
+import VerificaMatricola from './pages/VerificaMatricola.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Payout from './pages/Payout.jsx'
 import BuyProgram from './pages/BuyProgram.jsx'
@@ -108,6 +109,7 @@ export default function App() {
       <Route path="/admin" element={<PrivateRoute admin><Layout><AdminPanel /></Layout></PrivateRoute>} />
       <Route path="/admin/approva/:id" element={<ApprovaOrdine />} />
       <Route path="/admin/utente/:id" element={<PrivateRoute admin><Layout><SchedaUtente /></Layout></PrivateRoute>} />
+      <Route path="/verifica/:matricola" element={<VerificaMatricola />} />
       <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <InstallBanner />

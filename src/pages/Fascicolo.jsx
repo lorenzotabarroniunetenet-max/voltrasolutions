@@ -23,7 +23,19 @@ export default function Fascicolo() {
   if (loading) return <div style={{ color: 'var(--muted)', padding: 20 }}>Caricamento Fascicolo...</div>
   if (!data) return <div style={{ color: 'var(--red)', padding: 20 }}>Errore caricamento</div>
 
-  const { name, email, matricola, rank, lore, enlistedAt, daysOfService, decorations, serviceLog, memberNumber } = data
+  const downloadPDF = async () => {
+    const token = localStorage.getItem('voltra_token')
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'}/api/certificato/pdf`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `voltra-certificato-${matricola || 'membro'}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
   const accentColor = lore?.color || '#B4FF39'
 
   return (
@@ -83,6 +95,16 @@ export default function Fascicolo() {
             <TypewriterMotto motto={lore.motto} translation={lore.mottoTranslation} />
           </div>
         )}
+
+        {/* Certificato buttons */}
+        <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', gap: 10 }}>
+          <button onClick={downloadPDF} style={{ flex: 1, background: 'var(--lime)', color: '#000', border: 'none', padding: '11px 16px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 12, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+            📄 Scarica Certificato PDF
+          </button>
+          <a href={`/verifica/${matricola}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, background: 'transparent', color: 'var(--lime)', border: '1px solid rgba(180,255,57,.25)', padding: '11px 16px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '.04em', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            🔗 Pagina Verifica
+          </a>
+        </div>
       </div>
 
       {/* Decorazioni */}
