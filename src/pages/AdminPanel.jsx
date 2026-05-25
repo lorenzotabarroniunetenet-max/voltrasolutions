@@ -650,10 +650,34 @@ function UserDetail({ userId, back }) {
   const [addAccount, setAddAccount] = useState(false)
   const [editAccountId, setEditAccountId] = useState(null)
   const [userSub, setUserSub] = useState(undefined)
+  const [tradeLogOpen, setTradeLogOpen] = useState(false)
+  const [trades, setTrades] = useState([])
+  const [tradeNote, setTradeNote] = useState('')
 
   const BASE = import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'
   const token = localStorage.getItem('voltra_token')
   const authH = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+
+  const loadTrades = async () => {
+    const data = await fetch(`${BASE}/api/admin/users/${userId}/tradelog`, { headers: authH }).then(r => r.json()).catch(() => [])
+    setTrades(Array.isArray(data) ? data : [])
+  }
+  const addTrade = async (type) => {
+    await fetch(`${BASE}/api/admin/users/${userId}/tradelog`, { method: 'POST', headers: authH, body: JSON.stringify({ type, note: tradeNote }) })
+    setTradeNote(''); loadTrades()
+  }
+  const deleteTrade = async (logId) => {
+    await fetch(`${BASE}/api/admin/users/${userId}/tradelog/${logId}`, { method: 'DELETE', headers: authH })
+    loadTrades()
+  }
+  const resetTrades = async () => {
+    if (!window.confirm('Reset di tutte le operazioni?')) return
+    await fetch(`${BASE}/api/admin/users/${userId}/tradelog`, { method: 'DELETE', headers: authH })
+    loadTrades()
+  }
+  const wins = trades.filter(t => t.type === 'W').length
+  const losses = trades.filter(t => t.type === 'L').length
+  const winRate = trades.length > 0 ? Math.round(wins / trades.length * 100) + '%' : '—'
 
   const reload = async () => {
     setLoading(true); setError('')
@@ -670,7 +694,7 @@ function UserDetail({ userId, back }) {
     } catch (e) { setError(e.message || 'Errore') }
     finally { setLoading(false) }
   }
-  useEffect(() => { reload() }, [userId])
+  useEffect(() => { reload(); loadTrades() }, [userId])
 
   const createSubForUser = async () => {
     const endDate = new Date(); endDate.setMonth(endDate.getMonth() + 1)
@@ -805,24 +829,103 @@ function UserDetail({ userId, back }) {
       </div>
 
       {/* Giuramento */}
-      <div className="card" style={{ marginBottom: 20, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>⚔️ Giuramento</div>
-          <div style={{ fontSize: 12, color: user?.oathDone ? 'var(--lime)' : 'var(--red)' }}>
-            {user?.oathDone ? '✅ Prestato' : '❌ Non ancora prestato'}
+      <div className="card" style={{ marginBottom: 20, padding: '16px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: user?.oathDone ? 12 : 0 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>⚔️ Giuramento</div>
+            <div style={{ fontSize: 12, color: user?.oathDone ? 'var(--lime)' : 'var(--red)' }}>
+              {user?.oathDone ? '✅ Prestato' : '❌ Non ancora prestato'}
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              await fetch(`${import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'}/api/admin/users/${userId}/oath`, {
+                method: 'PATCH', headers: authH, body: JSON.stringify({ oathDone: !user?.oathDone })
+              })
+              reload()
+            }}
+            style={{ background: 'transparent', border: '1px solid var(--border)', color: user?.oathDone ? 'var(--red)' : 'var(--lime)', padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif', whiteSpace: 'nowrap' }}
+          >
+            {user?.oathDone ? '↩ Reset' : '⚡ Forza'}
+          </button>
+        </div>
+        {user?.oathDone && (
+          <button
+            onClick={async () => {
+              const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'}/api/certificato/pdf?userId=${userId}`, { headers: authH })
+              const blob = await res.blob()
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = `voltra-certificato-${user?.matricola || userId}.pdf`
+              a.click()
+              URL.revokeObjectURL(url)
+            }}
+            style={{ width: '100%', background: 'rgba(180,255,57,.06)', border: '1px solid rgba(180,255,57,.2)', color: 'var(--lime)', padding: '9px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}
+          >
+            📄 Scarica Certificato PDF
+          </button>
+        )}
+      </div>
+
+      {/* Trade Log */}
+      <div className="card" style={{ marginBottom: 20, overflow: 'hidden', cursor: 'default' }}
+        onDoubleClick={() => { setTradeLogOpen(o => !o); if (!tradeLogOpen) loadTrades() }}>
+        <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: tradeLogOpen ? '1px solid var(--border)' : 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>📊 Registro Operazioni</span>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', fontFamily: 'JetBrains Mono, monospace' }}>doppio click</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
+            <span style={{ color: 'var(--lime)' }}>W: {wins}</span>
+            <span style={{ color: 'rgba(255,255,255,.15)' }}>/</span>
+            <span style={{ color: 'var(--red)' }}>L: {losses}</span>
+            <span style={{ color: 'rgba(255,255,255,.3)' }}>{winRate}</span>
           </div>
         </div>
-        <button
-          onClick={async () => {
-            await fetch(`${import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'}/api/admin/users/${userId}/oath`, {
-              method: 'PATCH', headers: authH, body: JSON.stringify({ oathDone: !user?.oathDone })
-            })
-            reload()
-          }}
-          style={{ background: 'transparent', border: '1px solid var(--border)', color: user?.oathDone ? 'var(--red)' : 'var(--lime)', padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif', whiteSpace: 'nowrap' }}
-        >
-          {user?.oathDone ? '↩ Reset' : '⚡ Forza'}
-        </button>
+
+        {tradeLogOpen && (
+          <div style={{ padding: '14px 20px' }}>
+            {/* Summary */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 14 }}>
+              {[['Totale', trades.length, '#fff'], ['Win', wins, 'var(--lime)'], ['Loss', losses, 'var(--red)'], ['Win Rate', winRate, wins > losses ? 'var(--lime)' : 'rgba(255,255,255,.4)']].map(([l,v,c]) => (
+                <div key={l} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'rgba(255,255,255,.25)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 3 }}>{l}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: c, fontFamily: 'JetBrains Mono, monospace' }}>{v}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Add */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }} onClick={e => e.stopPropagation()}>
+              <input value={tradeNote} onChange={e => setTradeNote(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addTrade('W')}
+                placeholder="Note operazione (opzionale)"
+                style={{ flex: 1, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px', color: '#fff', fontFamily: 'Manrope, sans-serif', fontSize: 12, outline: 'none' }} />
+              <button onClick={() => addTrade('W')} style={{ background: 'rgba(180,255,57,.1)', border: '1px solid rgba(180,255,57,.3)', color: 'var(--lime)', padding: '9px 18px', borderRadius: 8, fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>W</button>
+              <button onClick={() => addTrade('L')} style={{ background: 'rgba(255,71,87,.08)', border: '1px solid rgba(255,71,87,.25)', color: 'var(--red)', padding: '9px 18px', borderRadius: 8, fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>L</button>
+            </div>
+
+            {/* List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto', marginBottom: 12 }} onClick={e => e.stopPropagation()}>
+              {trades.length === 0
+                ? <div style={{ textAlign: 'center', padding: 20, fontSize: 12, color: 'rgba(255,255,255,.2)', fontFamily: 'JetBrains Mono, monospace' }}>Nessuna operazione</div>
+                : trades.map(t => (
+                  <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 7, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0, fontFamily: 'JetBrains Mono, monospace', background: t.type === 'W' ? 'rgba(180,255,57,.1)' : 'rgba(255,71,87,.08)', border: `1px solid ${t.type === 'W' ? 'rgba(180,255,57,.2)' : 'rgba(255,71,87,.2)'}`, color: t.type === 'W' ? 'var(--lime)' : 'var(--red)' }}>{t.type}</div>
+                    <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,.6)' }}>{t.note || <span style={{ color: 'rgba(255,255,255,.2)', fontStyle: 'italic' }}>—</span>}</span>
+                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'rgba(255,255,255,.2)' }}>{new Date(t.createdAt).toLocaleDateString('it-IT')} {new Date(t.createdAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span>
+                    <button onClick={() => deleteTrade(t.id)} style={{ width: 20, height: 20, background: 'transparent', border: 'none', color: 'rgba(255,255,255,.15)', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}>×</button>
+                  </div>
+                ))
+              }
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
+              <button onClick={resetTrades} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,.08)', color: 'rgba(255,255,255,.3)', padding: '6px 14px', borderRadius: 6, fontFamily: 'Manrope, sans-serif', fontSize: 11, cursor: 'pointer' }}>↺ Reset tutto</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Abbonamento */}

@@ -99,15 +99,17 @@ export default function Fascicolo() {
           </div>
         )}
 
-        {/* Certificato buttons */}
-        <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', gap: 10 }}>
-          <button onClick={downloadPDF} style={{ flex: 1, background: 'var(--lime)', color: '#000', border: 'none', padding: '11px 16px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 12, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-            📄 Scarica Certificato PDF
-          </button>
-          <a href={`/verifica/${matricola}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, background: 'transparent', color: 'var(--lime)', border: '1px solid rgba(180,255,57,.25)', padding: '11px 16px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '.04em', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            🔗 Pagina Verifica
-          </a>
-        </div>
+        {/* Certificato buttons — solo dopo giuramento */}
+        {data.oathDone && (
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', gap: 10 }}>
+            <button onClick={downloadPDF} style={{ flex: 1, background: 'var(--lime)', color: '#000', border: 'none', padding: '11px 16px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 12, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+              Scarica Certificato PDF
+            </button>
+            <a href={`/verifica/${matricola}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, background: 'transparent', color: 'var(--lime)', border: '1px solid rgba(180,255,57,.25)', padding: '11px 16px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontWeight: 700, fontSize: 12, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '.04em', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              Pagina Verifica
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Decorazioni */}
