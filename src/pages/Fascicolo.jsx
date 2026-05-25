@@ -23,6 +23,8 @@ export default function Fascicolo() {
   if (loading) return <div style={{ color: 'var(--muted)', padding: 20 }}>Caricamento Fascicolo...</div>
   if (!data) return <div style={{ color: 'var(--red)', padding: 20 }}>Errore caricamento</div>
 
+  const { name, email, matricola, rank, lore, enlistedAt, daysOfService, decorations, serviceLog, memberNumber } = data
+
   const downloadPDF = async () => {
     const token = localStorage.getItem('voltra_token')
     const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'}/api/certificato/pdf`, {
@@ -36,6 +38,7 @@ export default function Fascicolo() {
     a.click()
     URL.revokeObjectURL(url)
   }
+
   const accentColor = lore?.color || '#B4FF39'
 
   return (
