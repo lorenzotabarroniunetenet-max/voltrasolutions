@@ -151,7 +151,7 @@ export default function BuyProgram() {
               {appliedCoupon ? (
                 <div>
                   <div style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'line-through', marginBottom: 2 }}>€{Number(selected.priceUsd)}</div>
-                  <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>${appliedCoupon.finalPrice.toFixed(2)}</div>
+                  <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>€{appliedCoupon.finalPrice.toFixed(2)}</div>
                 </div>
               ) : (
                 <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>€{Number(selected.priceUsd)}</div>
@@ -207,8 +207,8 @@ export default function BuyProgram() {
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--lime)' }}>✓ {appliedCoupon.code}</div>
                           <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-                            {appliedCoupon.discountType === 'percent' ? `-${appliedCoupon.discountValue}%` : `-$${appliedCoupon.discountValue}`}
-                            {' '}— Prezzo finale: <strong style={{ color: 'var(--lime)' }}>${appliedCoupon.finalPrice.toFixed(2)}</strong>
+                            {appliedCoupon.discountType === 'percent' ? `-${appliedCoupon.discountValue}%` : `-€${appliedCoupon.discountValue}`}
+                            {' '}— Prezzo finale: <strong style={{ color: 'var(--lime)' }}>€{appliedCoupon.finalPrice.toFixed(2)}</strong>
                           </div>
                         </div>
                         <button onClick={removeCoupon} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 18 }}>×</button>
@@ -319,7 +319,7 @@ export default function BuyProgram() {
                 <div>
                   <div style={{ fontSize: 10, color: 'var(--muted-2)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Quota accesso</div>
                   <div className="display" style={{ fontSize: 20, fontWeight: 700, color: isWip ? 'var(--muted-2)' : 'var(--lime)' }}>
-                    {isWip ? 'WIP' : `$${Number(p.priceUsd)}`}
+                    {isWip ? 'WIP' : `€${Number(p.priceUsd)}`}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
