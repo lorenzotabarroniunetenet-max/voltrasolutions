@@ -2081,8 +2081,13 @@ function SettingsTab() {
       { key: 'TELEGRAM_ADMIN_CHAT_ID', label: 'Chat ID admin' },
     ]},
     { title: 'Pagamenti', items: [
-      { key: 'PAYMENT_ADDRESS', label: 'Indirizzo wallet' },
-      { key: 'PAYMENT_NETWORK', label: 'Network' },
+      { key: 'PAYMENT_USDT_TRC20', label: 'USDT TRC-20 (Tron)' },
+      { key: 'PAYMENT_USDT_ERC20', label: 'USDT ERC-20 (Ethereum)' },
+      { key: 'PAYMENT_USDC_ERC20', label: 'USDC ERC-20 (Ethereum)' },
+      { key: 'PAYMENT_ETH',        label: 'ETH (Ethereum)' },
+      { key: 'PAYMENT_BTC',        label: 'BTC (Bitcoin)' },
+      { key: 'PAYMENT_ADDRESS', label: 'Indirizzo wallet (legacy)' },
+      { key: 'PAYMENT_NETWORK', label: 'Network (legacy)' },
     ]},
     { title: 'Effetti', items: [
       { key: 'GUNSHOT_DISABLED', label: 'Disabilita effetto sparo globalmente', help: 'Mettere "true" per disattivare per TUTTI gli utenti. "false" lascia decidere a ciascuno dalle proprie impostazioni.', type: 'toggle' },
