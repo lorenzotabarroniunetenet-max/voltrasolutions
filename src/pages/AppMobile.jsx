@@ -154,7 +154,12 @@ export default function AppMobile() {
         </div>
 
         <a href="/dashboard" onClick={() => sessionStorage.setItem('voltra.force.desktop','1')} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', border:'1px solid rgba(255,255,255,.05)', borderRadius:10, textDecoration:'none', color:'rgba(255,255,255,.2)', fontSize:11 }}>
-          🖥 Apri il sito completo
+          Apri il sito completo
+        </a>
+
+        <a href="#" onClick={e => { e.preventDefault(); const BASE=import.meta.env.VITE_API_URL||'https://voltra-backend-m4q8.onrender.com'; fetch(`${BASE}/api/certificato/pdf`,{headers:{Authorization:`Bearer ${localStorage.getItem('voltra_token')}`}}).then(r=>r.blob()).then(b=>{const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download='voltra-certificato.pdf';l.click()}) }}
+          style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px', background:'rgba(180,255,57,.06)', border:'1px solid rgba(180,255,57,.2)', borderRadius:10, textDecoration:'none', color:'#B4FF39', fontSize:11, fontWeight:700 }}>
+          Scarica Certificato PDF
         </a>
 
       </div>
