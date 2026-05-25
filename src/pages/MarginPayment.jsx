@@ -19,10 +19,10 @@ export default function MarginPayment() {
     const token = localStorage.getItem('voltra_token')
     Promise.all([
       fetch(`${BASE}/api/crypto/margin/me/active`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
-      api.prop?.wallets?.() || fetch(`${BASE}/api/prop/wallets`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => [])
-    ]).then(([m, w]) => {
-      setMargin(m)
-      const ws = Array.isArray(w) ? w : []
+      fetch(`${BASE}/api/purchase/payment-info`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ wallets: [] }))
+    ]).then(([m, info]) => {
+      setMargin(m?.id ? m : null)
+      const ws = Array.isArray(info?.wallets) ? info.wallets : []
       setWallets(ws)
       if (ws.length > 0) setSelectedNetwork(ws[0].network)
     }).finally(() => setLoading(false))
