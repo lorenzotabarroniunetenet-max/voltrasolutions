@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../lib/api.js'
 import Tooltip from '../components/Tooltip.jsx'
 import { useSonar } from '../context/SonarContext.jsx'
+import { CryptoConverter, useCryptoPrices, CRYPTO_NETWORKS } from '../hooks/useCryptoPrices.jsx'
 
 function TelegramIcon({ size = 20, color = 'currentColor' }) {
   return (
@@ -149,11 +150,11 @@ export default function BuyProgram() {
               <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Quota</div>
               {appliedCoupon ? (
                 <div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'line-through', marginBottom: 2 }}>${Number(selected.priceUsd)}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', textDecoration: 'line-through', marginBottom: 2 }}>€{Number(selected.priceUsd)}</div>
                   <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>${appliedCoupon.finalPrice.toFixed(2)}</div>
                 </div>
               ) : (
-                <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>${Number(selected.priceUsd)}</div>
+                <div className="display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--lime)' }}>€{Number(selected.priceUsd)}</div>
               )}
             </div>
           </div>
@@ -168,70 +169,13 @@ export default function BuyProgram() {
             </div>
           ) : (
             <>
-              {/* Network selector */}
-              <div style={{ marginBottom: 24 }}>
-                <div className="label" style={{ marginBottom: 10 }}>Seleziona network</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
-                  {wallets.map(w => (
-                    <button
-                      key={w.network}
-                      onClick={() => setSelectedNetwork(w.network)}
-                      style={{
-                        padding: '12px',
-                        background: selectedNetwork === w.network ? 'rgba(180,255,57,0.08)' : 'var(--surface-2)',
-                        border: selectedNetwork === w.network ? '1px solid rgba(180,255,57,0.4)' : '1px solid var(--border)',
-                        borderRadius: 10,
-                        color: selectedNetwork === w.network ? 'var(--lime)' : 'var(--text)',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s',
-                        textAlign: 'center',
-                      }}
-                    >
-                      {w.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {wallet && (
-                <>
-                  {/* Amount */}
-                  <div style={{ marginBottom: 20, padding: 16, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                      <span className="label" style={{ margin: 0 }}>Importo da inviare</span>
-                      <button onClick={() => copy(String(Number(selected.priceUsd)), 'amount')} style={{ background: 'transparent', border: 'none', color: 'var(--lime)', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
-                        {copied === 'amount' ? 'Copiato ✓' : 'Copia'}
-                      </button>
-                    </div>
-                    <div className="display" style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>${Number(selected.priceUsd)} USD</div>
-                  </div>
-
-                  {/* QR + Address */}
-                  <div style={{ marginBottom: 24, padding: 20, background: 'var(--surface-2)', borderRadius: 10, border: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
-                      {qrUrl && (
-                        <div style={{ background: '#0c0c0c', padding: 8, borderRadius: 8, flexShrink: 0 }}>
-                          <img src={qrUrl} alt="QR" style={{ display: 'block', width: 180, height: 180 }} />
-                        </div>
-                      )}
-                      <div style={{ flex: 1, minWidth: 200 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <span className="label" style={{ margin: 0 }}>Indirizzo wallet</span>
-                          <button onClick={() => copy(wallet.address, 'address')} style={{ background: 'transparent', border: 'none', color: 'var(--lime)', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>
-                            {copied === 'address' ? 'Copiato ✓' : 'Copia'}
-                          </button>
-                        </div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all', color: 'var(--text)', background: '#000', padding: 10, borderRadius: 6, border: '1px solid var(--border)', lineHeight: 1.5 }}>
-                          {wallet.address}
-                        </div>
-                        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
-                          ⚠️ Verifica il network. Invii a indirizzi sbagliati sono irrecuperabili.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              {/* Convertitore Crypto Live */}
+              <CryptoConverter
+                eurAmount={Number(selected.priceUsd)}
+                selectedNetwork={selectedNetwork}
+                onSelectNetwork={setSelectedNetwork}
+                wallets={wallets.map(w => ({ ...w, id: w.network }))}
+              />
 
                   {/* Telegram handle */}
                   {(telegramHandle || telegramUrl) && (
@@ -334,7 +278,6 @@ export default function BuyProgram() {
                   >
                     {submitting ? 'Invio in corso...' : '📡 Notifica Comando →'}
                   </button>
-                </>
               )}
             </>
           )}

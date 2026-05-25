@@ -10,6 +10,7 @@ import DailyStreak from '../components/DailyStreak.jsx'
 import TiroDelComando from '../components/TiroDelComando.jsx'
 import TourOverlay from '../components/TourOverlay.jsx'
 import OathOverlay from '../components/OathOverlay.jsx'
+import MarginBanner from '../components/MarginBanner.jsx'
 
 export default function Dashboard() {
   const nav = useNavigate()
@@ -90,6 +91,7 @@ export default function Dashboard() {
     <div>
       <OathOverlay user={user} />
       <TourOverlay />
+      <MarginBanner />
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>

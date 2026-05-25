@@ -637,6 +637,130 @@ function BriefingsTab() {
   )
 }
 
+function MarginAdminSection({ userId, authH, BASE }) {
+  const [margin, setMargin] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [amount, setAmount] = useState(350)
+
+  const load = () => {
+    fetch(`${BASE}/api/crypto/margin/${userId}`, { headers: authH })
+      .then(r => r.json()).then(setMargin).catch(() => {}).finally(() => setLoading(false))
+  }
+
+  useEffect(() => { load() }, [userId])
+
+  const request = async () => {
+    await fetch(`${BASE}/api/crypto/margin/${userId}`, { method: 'POST', headers: authH, body: JSON.stringify({ amount }) })
+    load()
+  }
+  const revoke = async () => {
+    await fetch(`${BASE}/api/crypto/margin/${userId}`, { method: 'DELETE', headers: authH })
+    load()
+  }
+
+  if (loading) return <div style={{ padding: '14px 20px', fontSize: 12, color: 'var(--muted)' }}>Caricamento...</div>
+
+  return (
+    <div style={{ padding: '14px 20px' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>💰 Richiesta Margine</div>
+      {(!margin || margin.status === 'REVOKED') && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} min={1}
+            style={{ width: 100, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 7, padding: '8px 10px', color: '#fff', fontFamily: 'JetBrains Mono, monospace', fontSize: 13, outline: 'none' }} />
+          <span style={{ fontSize: 12, color: 'var(--muted)' }}>EUR</span>
+          <button onClick={request} style={{ background: 'rgba(255,71,87,.08)', border: '1px solid rgba(255,71,87,.3)', color: 'var(--red)', padding: '8px 16px', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>
+            ⚡ Richiedi margine
+          </button>
+        </div>
+      )}
+      {margin?.status === 'PENDING' && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <span style={{ background: 'rgba(232,200,74,.08)', border: '1px solid rgba(232,200,74,.2)', color: '#E8C84A', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace' }}>
+              ⏳ In attesa · €{margin.amount}
+            </span>
+          </div>
+          <button onClick={revoke} style={{ background: 'transparent', border: '1px solid var(--border)', color: 'rgba(255,255,255,.4)', padding: '7px 14px', borderRadius: 7, fontSize: 11, cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>
+            ↺ Revoca
+          </button>
+        </div>
+      )}
+      {margin?.status === 'PAID' && (
+        <span style={{ background: 'rgba(180,255,57,.08)', border: '1px solid rgba(180,255,57,.2)', color: 'var(--lime)', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace' }}>
+          ✅ Pagato · €{margin.amount}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function MarginPanel({ userId, authH, BASE }) {
+  const [margin, setMargin] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const load = async () => {
+    setLoading(true)
+    const data = await fetch(`${BASE}/api/crypto/margin/${userId}`, { headers: authH }).then(r => r.json()).catch(() => null)
+    setMargin(data)
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [userId])
+
+  const request = async () => {
+    await fetch(`${BASE}/api/crypto/margin/${userId}`, { method: 'POST', headers: authH, body: JSON.stringify({ amount: 350 }) })
+    load()
+  }
+
+  const revoke = async () => {
+    await fetch(`${BASE}/api/crypto/margin/${userId}`, { method: 'DELETE', headers: authH })
+    load()
+  }
+
+  const markPaid = async () => {
+    await fetch(`${BASE}/api/crypto/margin/${userId}/paid`, { method: 'PATCH', headers: authH })
+    load()
+  }
+
+  if (loading) return null
+
+  const isPending = margin?.status === 'PENDING'
+  const isPaid = margin?.status === 'PAID'
+
+  return (
+    <div className="card" style={{ marginBottom: 20, padding: '16px 24px' }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>💶 Margine Aggiuntivo</div>
+      {!margin || margin?.status === 'REVOKED' ? (
+        <div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.35)', marginBottom: 12 }}>Nessuna richiesta attiva</div>
+          <button onClick={request} style={{ width: '100%', background: 'rgba(255,71,87,.08)', border: '1px solid rgba(255,71,87,.25)', color: '#ff4757', padding: '11px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+            ⚡ Richiedi margine €350
+          </button>
+        </div>
+      ) : isPending ? (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ background: 'rgba(232,200,74,.1)', border: '1px solid rgba(232,200,74,.2)', color: '#E8C84A', padding: '3px 10px', borderRadius: 4, fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>⏳ IN ATTESA · €{margin.amount}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={markPaid} style={{ flex: 1, background: 'rgba(180,255,57,.08)', border: '1px solid rgba(180,255,57,.2)', color: 'var(--lime)', padding: '9px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>
+              ✅ Segna pagato
+            </button>
+            <button onClick={revoke} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,.08)', color: 'rgba(255,255,255,.3)', padding: '9px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontSize: 11, cursor: 'pointer' }}>
+              ↺ Revoca
+            </button>
+          </div>
+        </div>
+      ) : isPaid ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ background: 'rgba(180,255,57,.08)', border: '1px solid rgba(180,255,57,.2)', color: 'var(--lime)', padding: '3px 10px', borderRadius: 4, fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>✅ PAGATO · €{margin.amount}</span>
+          <button onClick={request} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,.08)', color: 'rgba(255,255,255,.3)', padding: '4px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>Nuova richiesta</button>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function UserDetail({ userId, back }) {
   const [user, setUser] = useState(null)
   const [programs, setPrograms] = useState([])
@@ -868,6 +992,9 @@ function UserDetail({ userId, back }) {
         )}
       </div>
 
+      {/* Margine Aggiuntivo */}
+      <MarginPanel userId={userId} authH={authH} BASE={BASE} />
+
       {/* Trade Log */}
       <div className="card" style={{ marginBottom: 20, overflow: 'hidden', cursor: 'default' }}
         onDoubleClick={() => { setTradeLogOpen(o => !o); if (!tradeLogOpen) loadTrades() }}>
@@ -926,6 +1053,11 @@ function UserDetail({ userId, back }) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Richiesta Margine */}
+      <div className="card" style={{ marginBottom: 20, overflow: 'hidden' }}>
+        <MarginAdminSection userId={userId} authH={authH} BASE={BASE} />
       </div>
 
       {/* Abbonamento */}
