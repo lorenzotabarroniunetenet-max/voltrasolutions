@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [latestBriefing, setLatestBriefing] = useState(null)
   const [securityStatus, setSecurityStatus] = useState(null)
   const [nudgeHidden, setNudgeHidden] = useState(false)
+  const [pendingOrders, setPendingOrders] = useState([])
 
   // Mobile o PWA standalone → redirect a /app con design premium
   useEffect(() => {
@@ -40,6 +41,12 @@ export default function Dashboard() {
     }).catch(() => setLoading(false))
     api.briefingLatest().then(setLatestBriefing).catch(() => {})
     api.email2faStatus().then(setSecurityStatus).catch(() => {})
+    // Carica ordini pendenti
+    const token = localStorage.getItem('voltra_token')
+    const BASE = import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'
+    fetch(`${BASE}/api/purchase/my-orders`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => setPendingOrders(Array.isArray(d) ? d.filter(o => o.status === 'PENDING') : []))
+      .catch(() => {})
   }, [])
 
   const dismissNudge = async () => {
@@ -92,6 +99,21 @@ export default function Dashboard() {
       <OathOverlay user={user} />
       <TourOverlay />
       <MarginBanner />
+
+      {/* Banner ordini in attesa di verifica */}
+      {pendingOrders.length > 0 && (
+        <div style={{ background: 'rgba(232,200,74,.06)', border: '1px solid rgba(232,200,74,.25)', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 14 }}>
+          <span style={{ fontSize: 22, flexShrink: 0 }}>⏳</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: '#E8C84A', marginBottom: 3 }}>Pagamento in verifica dal Comando</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.5)', lineHeight: 1.6 }}>
+              {pendingOrders.length === 1
+                ? `La richiesta per "${pendingOrders[0].programName}" è in attesa di verifica. Riceverai conferma via Telegram o email entro 24 ore.`
+                : `${pendingOrders.length} richieste in attesa di verifica. Riceverai conferma via Telegram o email.`}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
