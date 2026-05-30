@@ -176,8 +176,24 @@ export default function Personale() {
           )}
           {subscription?.daysLeft <= 7 && subscription?.daysLeft > 0 && (
             <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(232,200,74,.08)', borderRadius: 8, fontSize: 12, color: '#E8C84A' }}>
-              ⚠️ Il tuo abbonamento scade tra {subscription.daysLeft} {subscription.daysLeft === 1 ? 'giorno' : 'giorni'}. Contatta il Comando.
+              ⚠️ Il tuo abbonamento scade tra {subscription.daysLeft} {subscription.daysLeft === 1 ? 'giorno' : 'giorni'}.
             </div>
+          )}
+          {/* Bottone paga abbonamento — visibile se scaduto o in scadenza */}
+          {(!subscription || subscription.daysLeft <= 7) && (
+            <button
+              onClick={async () => {
+                const token = localStorage.getItem('voltra_token')
+                const BASE = import.meta.env.VITE_API_URL || 'https://voltra-backend-m4q8.onrender.com'
+                await fetch(`${BASE}/api/subscriptions/request-payment`, {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+                })
+                alert('Richiesta inviata al Comando. Verrai contattato per il pagamento.')
+              }}
+              style={{ marginTop: 10, width: '100%', background: 'rgba(180,255,57,.08)', border: '1px solid rgba(180,255,57,.25)', color: 'var(--lime)', padding: '10px', borderRadius: 8, fontFamily: 'Manrope, sans-serif', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+              💳 Paga abbonamento €99/mese
+            </button>
           )}
         </div>
       )}

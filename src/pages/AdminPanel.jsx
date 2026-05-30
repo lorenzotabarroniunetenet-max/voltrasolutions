@@ -992,6 +992,26 @@ function UserDetail({ userId, back }) {
         )}
       </div>
 
+      {/* Rimborso */}
+      <div className="card" style={{ marginBottom: 20, padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>💸 Rimborso Missione</div>
+          <div style={{ fontSize: 12, color: user?.payoutEnabled ? 'var(--lime)' : 'var(--red)' }}>
+            {user?.payoutEnabled ? '✅ Abilitato' : '🔒 Bloccato'}
+          </div>
+        </div>
+        <button
+          onClick={async () => {
+            await fetch(`${BASE}/api/admin/users/${userId}/payout-enabled`, {
+              method: 'PATCH', headers: authH, body: JSON.stringify({ enabled: !user?.payoutEnabled })
+            })
+            reload()
+          }}
+          style={{ background: 'transparent', border: '1px solid var(--border)', color: user?.payoutEnabled ? 'var(--red)' : 'var(--lime)', padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Manrope, sans-serif', whiteSpace: 'nowrap' }}>
+          {user?.payoutEnabled ? '🔒 Blocca' : '✅ Abilita'}
+        </button>
+      </div>
+
       {/* Margine Aggiuntivo */}
       <MarginPanel userId={userId} authH={authH} BASE={BASE} />
 
